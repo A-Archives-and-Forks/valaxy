@@ -13,7 +13,6 @@ import fs from 'fs-extra'
 import matter from 'gray-matter'
 import MarkdownIt from 'markdown-it'
 
-import ora from 'ora'
 import { getBorderCharacters, table } from 'table'
 import { tObject } from '../../../shared'
 import { matterOptions } from '../../plugins/markdown/transform/matter'
@@ -82,8 +81,7 @@ async function extractImagePathsFromHTML(htmlPath: string, DOMAIN: string): Prom
  * @param options
  */
 export async function build(options: ResolvedValaxyOptions) {
-  // consola.info(`${yellow('RSS Generating ...')}`)
-  const s = ora('RSS Generating ...').start()
+  consola.start('RSS Generating ...')
 
   const { config } = options
   const siteConfig = config.siteConfig
@@ -146,7 +144,7 @@ export async function build(options: ResolvedValaxyOptions) {
     : `${DOMAIN}${ensurePrefix('/', authorAvatar)}`
   feedOptions.favicon = `${DOMAIN}${siteConfig.feed?.favicon || siteConfig.favicon}`
 
-  s.succeed('RSS Generated.')
+  consola.success('RSS Generated.')
   await writeFeed(feedOptions, posts, options, feedNameMap)
 }
 

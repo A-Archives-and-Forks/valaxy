@@ -24,6 +24,18 @@ export async function scanPostFiles(userRoot: string, globPattern = '**/*.md'): 
 }
 
 /**
+ * Scan markdown files from `pages/` directory using configurable glob patterns.
+ *
+ * @param userRoot User root directory
+ * @param include Glob patterns relative to `pages/` directory, e.g. `['posts\/**\/*.md', 'guide\/**\/*.md']`
+ */
+export async function scanPageFiles(userRoot: string, include: string[]): Promise<string[]> {
+  const pagesPattern = fg.convertPathToPattern(path.join(userRoot, 'pages'))
+  const patterns = include.map(p => `${pagesPattern}/${p}`)
+  return fg(patterns)
+}
+
+/**
  * Read and parse frontmatter from markdown files.
  */
 export async function readPostFiles(files: string[]): Promise<RawPost[]> {

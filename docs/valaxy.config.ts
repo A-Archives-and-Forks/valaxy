@@ -4,6 +4,7 @@ import { defineValaxyConfig } from 'valaxy'
 import { addonAlgolia } from 'valaxy-addon-algolia'
 import { addonComponents } from 'valaxy-addon-components'
 import { addonGitLog } from 'valaxy-addon-git-log'
+import { addonMeting } from 'valaxy-addon-meting'
 
 import { localIconLoader } from 'vitepress-plugin-group-icons'
 
@@ -50,6 +51,8 @@ export default defineValaxyConfig<PressTheme.Config>({
 
     llms: {
       enable: true,
+      files: true,
+      include: ['**/*.md'],
     },
   },
 
@@ -60,6 +63,7 @@ export default defineValaxyConfig<PressTheme.Config>({
       indexName: 'valaxysite',
     }),
     addonComponents(),
+    addonMeting(),
     addonGitLog({
       contributor: {
         strategy: 'prebuilt',

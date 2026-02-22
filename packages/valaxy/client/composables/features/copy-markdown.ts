@@ -14,12 +14,13 @@ import { useRoute } from 'vue-router'
  * ```vue
  * <script setup>
  * import { useCopyMarkdown } from 'valaxy'
- * const { copy, copied, loading, available } = useCopyMarkdown()
+ * const { copy, copied, loading, available, error } = useCopyMarkdown()
  * </script>
  * <template>
  *   <button v-if="available" @click="copy" :disabled="loading">
  *     {{ copied ? 'Copied!' : 'Copy Markdown' }}
  *   </button>
+ *   <span v-if="error" class="text-red">{{ error }}</span>
  * </template>
  * ```
  */
@@ -28,6 +29,7 @@ export function useCopyMarkdown() {
   const copied = ref(false)
   const loading = ref(false)
   const available = ref(false)
+  const error = ref<string | null>(null)
   const { copy: copyToClipboard } = useClipboard({ legacy: true })
 
   const mdUrl = computed(() => {
@@ -41,6 +43,7 @@ export function useCopyMarkdown() {
   if (isClient) {
     watchEffect(() => {
       available.value = false
+      error.value = null
       fetch(mdUrl.value, { method: 'HEAD' })
         .then((res) => { available.value = res.ok })
         .catch(() => { available.value = false })
@@ -51,6 +54,7 @@ export function useCopyMarkdown() {
     if (loading.value)
       return
 
+    error.value = null
     loading.value = true
     try {
       const res = await fetch(mdUrl.value)
@@ -65,12 +69,17 @@ export function useCopyMarkdown() {
       }, 2000)
     }
     catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      error.value = msg
       console.error('[valaxy] Failed to copy markdown:', err)
+      setTimeout(() => {
+        error.value = null
+      }, 3000)
     }
     finally {
       loading.value = false
     }
   }
 
-  return { copy, copied, loading, mdUrl, available }
+  return { copy, copied, loading, mdUrl, available, error }
 }

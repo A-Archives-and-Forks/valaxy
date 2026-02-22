@@ -16,6 +16,7 @@ function createMockOptions(overrides: Partial<{
   fullText: boolean
   files: boolean
   prompt: string
+  include: string[]
 }> = {}): ResolvedValaxyOptions {
   return {
     userRoot: mockUserRoot,
@@ -30,6 +31,7 @@ function createMockOptions(overrides: Partial<{
           fullText: overrides.fullText ?? true,
           files: overrides.files ?? true,
           prompt: overrides.prompt ?? '',
+          include: overrides.include,
         },
       },
       modules: {
@@ -255,6 +257,110 @@ Content of nested post.`,
       expect(llmsTxt).not.toContain('undefined')
     })
   })
+
+  describe('include configuration', () => {
+    beforeEach(async () => {
+      await fs.ensureDir(resolve(mockUserRoot, 'pages/guide'))
+      await fs.writeFile(
+        resolve(mockUserRoot, 'pages/guide/getting-started.md'),
+        `---
+title: Getting Started
+date: 2024-02-01
+description: How to get started
+---
+# Getting Started
+
+Follow these steps to get started.`,
+        'utf-8',
+      )
+
+      await fs.ensureDir(resolve(mockUserRoot, 'pages/guide/advanced'))
+      await fs.writeFile(
+        resolve(mockUserRoot, 'pages/guide/advanced/plugins.md'),
+        `---
+title: Plugins Guide
+date: 2024-02-05
+description: How to use plugins
+---
+# Plugins Guide
+
+Learn how to create and use plugins.`,
+        'utf-8',
+      )
+    })
+
+    it('should default to posts/**/*.md when include is not set', async () => {
+      await build(createMockOptions())
+
+      const llmsTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms.txt'), 'utf-8')
+
+      expect(llmsTxt).toContain('Hello World')
+      expect(llmsTxt).toContain('Second Post')
+      expect(llmsTxt).not.toContain('Getting Started')
+      expect(llmsTxt).not.toContain('Plugins Guide')
+    })
+
+    it('should include all pages when set to **/*.md', async () => {
+      await build(createMockOptions({ include: ['**/*.md'] }))
+
+      const llmsTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms.txt'), 'utf-8')
+
+      expect(llmsTxt).toContain('Hello World')
+      expect(llmsTxt).toContain('Second Post')
+      expect(llmsTxt).toContain('Getting Started')
+      expect(llmsTxt).toContain('Plugins Guide')
+    })
+
+    it('should include only specified directories', async () => {
+      await build(createMockOptions({ include: ['guide/**/*.md'] }))
+
+      const llmsTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms.txt'), 'utf-8')
+
+      expect(llmsTxt).not.toContain('Hello World')
+      expect(llmsTxt).not.toContain('Second Post')
+      expect(llmsTxt).toContain('Getting Started')
+      expect(llmsTxt).toContain('Plugins Guide')
+    })
+
+    it('should support multiple include patterns', async () => {
+      await build(createMockOptions({ include: ['posts/**/*.md', 'guide/**/*.md'] }))
+
+      const llmsTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms.txt'), 'utf-8')
+
+      expect(llmsTxt).toContain('Hello World')
+      expect(llmsTxt).toContain('Getting Started')
+      expect(llmsTxt).toContain('Plugins Guide')
+    })
+
+    it('should group pages by top-level directory in llms.txt', async () => {
+      await build(createMockOptions({ include: ['**/*.md'] }))
+
+      const llmsTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms.txt'), 'utf-8')
+
+      expect(llmsTxt).toContain('## Posts')
+      expect(llmsTxt).toContain('## Guide')
+    })
+
+    it('should generate .md files for non-posts pages', async () => {
+      await build(createMockOptions({ include: ['**/*.md'], files: true }))
+
+      const guideMd = await fs.readFile(resolve(mockUserRoot, 'dist/guide/getting-started.md'), 'utf-8')
+      expect(guideMd).toContain('# Getting Started')
+
+      const pluginsMd = await fs.readFile(resolve(mockUserRoot, 'dist/guide/advanced/plugins.md'), 'utf-8')
+      expect(pluginsMd).toContain('# Plugins Guide')
+    })
+
+    it('should include non-posts pages in llms-full.txt', async () => {
+      await build(createMockOptions({ include: ['**/*.md'], fullText: true }))
+
+      const fullTxt = await fs.readFile(resolve(mockUserRoot, 'dist/llms-full.txt'), 'utf-8')
+
+      expect(fullTxt).toContain('## Getting Started')
+      expect(fullTxt).toContain('Follow these steps to get started.')
+      expect(fullTxt).toContain('## Plugins Guide')
+    })
+  })
 })
 
 describe('module shared utilities', () => {
@@ -279,6 +385,21 @@ describe('module shared utilities', () => {
     it('should handle deeply nested regular .md', () => {
       expect(filePathToUrlPath('/project/pages/posts/nested/deep.md', userRoot))
         .toBe('/posts/nested/deep')
+    })
+
+    it('should convert non-posts pages', () => {
+      expect(filePathToUrlPath('/project/pages/guide/getting-started.md', userRoot))
+        .toBe('/guide/getting-started')
+    })
+
+    it('should convert non-posts index.md pages', () => {
+      expect(filePathToUrlPath('/project/pages/guide/config/index.md', userRoot))
+        .toBe('/guide/config')
+    })
+
+    it('should convert root-level pages', () => {
+      expect(filePathToUrlPath('/project/pages/about.md', userRoot))
+        .toBe('/about')
     })
   })
 

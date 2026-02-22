@@ -456,6 +456,18 @@ export interface SiteConfig {
      * @default ''
      */
     prompt: string
+    /**
+     * @zh 要包含的 markdown 文件 glob 模式（相对于 pages/ 目录）。
+     * 默认为 `['posts\/**\/*.md']` 仅包含 posts。
+     * 设为 `['**\/*.md']` 可包含所有 pages 下的 markdown 文件。
+     * 也可以指定多个目录，如 `['posts\/**\/*.md', 'guide\/**\/*.md']`。
+     * @en Glob patterns for markdown files to include (relative to pages/ directory).
+     * Defaults to `['posts\/**\/*.md']` to only include posts.
+     * Set to `['**\/*.md']` to include all markdown files under pages/.
+     * You can also specify multiple directories, e.g. `['posts\/**\/*.md', 'guide\/**\/*.md']`.
+     * @default ['posts\/**\/*.md']
+     */
+    include?: string[]
   }
 
   /**

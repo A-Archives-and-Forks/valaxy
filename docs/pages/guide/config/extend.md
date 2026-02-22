@@ -248,16 +248,19 @@ Valaxy 内置了 LLMS 模块，遵循 [llms.txt 标准](https://llmstxt.org/)，
 
 启用后，构建产物中将包含：
 
-- `/llms.txt` — 站点文章索引，包含指向各 `.md` 文件的链接
-- `/llms-full.txt` — 所有文章内容的合集（可选）
-- `/posts/*.md` — 每篇文章的原始 Markdown 文件，可通过 URL 直接访问
+- `/llms.txt` — 站点页面索引，按目录分组，包含指向各 `.md` 文件的链接
+- `/llms-full.txt` — 所有页面内容的合集（可选）
+- `/*.md` — 每个页面的原始 Markdown 文件，可通过 URL 直接访问
 
 同时，主题可以利用 `useCopyMarkdown()` composable 为文章页添加「复制 Markdown」按钮（Yun 主题已内置支持）。
 
 - `enable`: 是否启用 LLMS 模块。默认 `false`，关闭。
-- `files`: 是否为每篇文章生成独立的 `.md` 文件。默认 `true`。
-- `fullText`: 是否生成 `llms-full.txt`（包含所有文章完整内容）。默认 `true`。
+- `files`: 是否为每个页面生成独立的 `.md` 文件。默认 `true`。
+- `fullText`: 是否生成 `llms-full.txt`（包含所有页面完整内容）。默认 `true`。
 - `prompt`: 自定义提示词，添加到 `llms.txt` 的描述部分。默认 `''`。
+- `include`: 要包含的 Markdown 文件 glob 模式（相对于 `pages/` 目录）。默认 `['posts/**/*.md']` 仅包含 posts 目录。设为 `['**/*.md']` 可包含所有 `pages/` 下的 Markdown 文件，也可指定多个目录如 `['posts/**/*.md', 'guide/**/*.md']`。
+
+`llms.txt` 中的页面会按顶级目录自动分组（如 `## Posts`、`## Guide` 等）。
 
 :::
 
@@ -267,16 +270,19 @@ Valaxy has a built-in LLMS module, following the [llms.txt standard](https://llm
 
 When enabled, the build output will include:
 
-- `/llms.txt` — Post index with links to individual `.md` files
-- `/llms-full.txt` — All post content concatenated (optional)
-- `/posts/*.md` — Raw Markdown files for each post, accessible via URL
+- `/llms.txt` — Page index grouped by directory, with links to individual `.md` files
+- `/llms-full.txt` — All page content concatenated (optional)
+- `/*.md` — Raw Markdown files for each page, accessible via URL
 
 Themes can use the `useCopyMarkdown()` composable to add a "Copy Markdown" button on post pages (built-in support in Yun theme).
 
 - `enable`: Whether to enable the LLMS module. Default is `false`, disabled.
-- `files`: Whether to generate individual `.md` files for each post. Default is `true`.
-- `fullText`: Whether to generate `llms-full.txt` (with all post content inlined). Default is `true`.
+- `files`: Whether to generate individual `.md` files for each page. Default is `true`.
+- `fullText`: Whether to generate `llms-full.txt` (with all page content inlined). Default is `true`.
 - `prompt`: Custom prompt text, added to the `llms.txt` description section. Default is `''`.
+- `include`: Glob patterns for markdown files to include (relative to `pages/` directory). Default is `['posts/**/*.md']` to only include posts. Set to `['**/*.md']` to include all markdown files under `pages/`. You can also specify multiple directories, e.g. `['posts/**/*.md', 'guide/**/*.md']`.
+
+Pages in `llms.txt` are automatically grouped by their top-level directory (e.g. `## Posts`, `## Guide`, etc.).
 
 :::
 
@@ -287,6 +293,14 @@ export default defineSiteConfig({
     files: true,
     fullText: true,
     prompt: '',
+    // Default: only posts
+    // include: ['posts/**/*.md'],
+
+    // Include all markdown files under pages/
+    // include: ['**/*.md'],
+
+    // Include specific directories
+    // include: ['posts/**/*.md', 'guide/**/*.md'],
   },
 })
 ```

@@ -118,6 +118,7 @@ export const defaultSiteConfig: SiteConfig = {
     fullText: true,
     files: true,
     prompt: '',
+    include: ['posts/**/*.md'],
   },
 }
 

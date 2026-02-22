@@ -3,11 +3,10 @@ import path from 'node:path'
 import { consola } from 'consola'
 import { colors } from 'consola/utils'
 import fs from 'fs-extra'
-import ora from 'ora'
 import { tObject } from '../../../shared'
 import { LOCALE_PREFIX } from '../../../shared/constants'
 import { loadLocalesYml, nodeT } from '../../../shared/node/i18n'
-import { filePathToUrlPath, filterPublicPosts, getSiteUrl, readPostFiles, scanPostFiles } from '../utils'
+import { filePathToUrlPath, filterPublicPosts, getSiteUrl, readPostFiles, scanPageFiles } from '../utils'
 
 export interface LlmsPost {
   title: string
@@ -33,7 +32,7 @@ export function resolveText(value: string | Record<string, string>, lang: string
  * @see https://llmstxt.org/
  */
 export async function build(options: ResolvedValaxyOptions) {
-  const s = ora('Generating llms.txt ...').start()
+  consola.start('Generating llms.txt ...')
 
   const { config } = options
   const siteConfig = config.siteConfig
@@ -49,7 +48,8 @@ export async function build(options: ResolvedValaxyOptions) {
   }
 
   // Scan, read, and filter posts
-  const files = await scanPostFiles(options.userRoot)
+  const include = llmsConfig.include || ['posts/**/*.md']
+  const files = await scanPageFiles(options.userRoot, include)
   const rawPosts = await readPostFiles(files)
   const publicPosts = filterPublicPosts(rawPosts)
 
@@ -103,11 +103,25 @@ export async function build(options: ResolvedValaxyOptions) {
     consola.debug(`[llms] Copied ${colors.dim(posts.length.toString())} raw .md files to dist/`)
   }
 
-  s.succeed(`llms.txt generated. (${posts.length} posts)`)
+  consola.success(`llms.txt generated. (${posts.length} pages)`)
+}
+
+/**
+ * Get the top-level directory section name from a URL path.
+ * e.g. '/posts/hello' → 'Posts', '/guide/getting-started' → 'Guide', '/about' → 'Pages'
+ */
+function getSectionName(urlPath: string): string {
+  const parts = urlPath.split('/').filter(Boolean)
+  if (parts.length >= 2) {
+    const dir = parts[0]
+    return dir.charAt(0).toUpperCase() + dir.slice(1)
+  }
+  return 'Pages'
 }
 
 /**
  * Generate the llms.txt index file content following the llms.txt standard.
+ * Pages are grouped by their top-level directory (e.g. Posts, Guide, etc.).
  * @see https://llmstxt.org/
  */
 export function generateLlmsTxt(params: {
@@ -137,17 +151,28 @@ export function generateLlmsTxt(params: {
     lines.push('')
   }
 
-  // H2: Posts section with links to .md files
-  lines.push('## Posts')
-  lines.push('')
+  // Group posts by section
+  const sections = new Map<string, LlmsPost[]>()
   for (const post of posts) {
-    const mdUrl = siteUrl
-      ? `${siteUrl}${post.urlPath}.md`
-      : `${post.urlPath}.md`
-    const desc = post.description ? `: ${post.description}` : ''
-    lines.push(`- [${post.title}](${mdUrl})${desc}`)
+    const section = getSectionName(post.urlPath)
+    if (!sections.has(section))
+      sections.set(section, [])
+    sections.get(section)!.push(post)
   }
-  lines.push('')
+
+  // H2: Each section with links to .md files
+  for (const [section, sectionPosts] of sections) {
+    lines.push(`## ${section}`)
+    lines.push('')
+    for (const post of sectionPosts) {
+      const mdUrl = siteUrl
+        ? `${siteUrl}${post.urlPath}.md`
+        : `${post.urlPath}.md`
+      const desc = post.description ? `: ${post.description}` : ''
+      lines.push(`- [${post.title}](${mdUrl})${desc}`)
+    }
+    lines.push('')
+  }
 
   return lines.join('\n')
 }

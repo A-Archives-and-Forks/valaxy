@@ -7,7 +7,7 @@ import fs from 'fs-extra'
 import matter from 'gray-matter'
 import { loadLocalesYml } from '../../shared/node/i18n'
 import { generateLlmsFullTxt, generateLlmsTxt, resolveText } from '../modules/llms/utils'
-import { filePathToUrlPath, filterPublicPosts, getSiteUrl, readPostFiles, scanPostFiles } from '../modules/utils'
+import { filePathToUrlPath, filterPublicPosts, getSiteUrl, readPostFiles, scanPageFiles } from '../modules/utils'
 import { matterOptions } from './markdown/transform/matter'
 
 /**
@@ -111,7 +111,8 @@ async function buildLlmsFullTxt(options: ResolvedValaxyOptions): Promise<string>
  * Scan, read, filter, and sort posts into LlmsPost[].
  */
 async function collectPosts(options: ResolvedValaxyOptions, lang: string): Promise<LlmsPost[]> {
-  const files = await scanPostFiles(options.userRoot)
+  const include = options.config.siteConfig.llms.include || ['posts/**/*.md']
+  const files = await scanPageFiles(options.userRoot, include)
   const rawPosts = await readPostFiles(files)
   const publicPosts = filterPublicPosts(rawPosts)
 
@@ -128,9 +129,9 @@ async function collectPosts(options: ResolvedValaxyOptions, lang: string): Promi
 }
 
 /**
- * Resolve a URL like `/posts/hello.md` to raw markdown content (no frontmatter).
+ * Resolve a URL like `/posts/hello.md` or `/guide/getting-started.md` to raw markdown content (no frontmatter).
  *
- * Checks both `pages/posts/hello.md` and `pages/posts/hello/index.md`.
+ * Checks both `pages/{path}.md` and `pages/{path}/index.md`.
  * Returns `null` if not found or post is draft/hidden/encrypted.
  */
 async function resolveRawMd(url: string, options: ResolvedValaxyOptions): Promise<string | null> {
