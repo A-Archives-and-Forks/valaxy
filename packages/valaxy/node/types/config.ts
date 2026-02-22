@@ -1,6 +1,5 @@
 import type Vue from '@vitejs/plugin-vue'
 
-import type { Options as BeastiesOptions } from 'beasties'
 import type { Hookable } from 'hookable'
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer'
 import type { presetAttributify, presetIcons, presetTypography, presetWind4 } from 'unocss'
@@ -105,6 +104,34 @@ export interface ValaxyExtendConfig {
      * @default false
      */
     ssgForPagination: boolean
+    /**
+     * @en FOUC (Flash of Unstyled Content) guard configuration.
+     * Prevents layout shift on first paint by hiding the page body until
+     * full CSS is loaded. Uses `body { opacity: 0 }` inline, then the
+     * main stylesheet sets `body { opacity: 1 }` to reveal content.
+     *
+     * @zh FOUC（无样式内容闪烁）防护配置。
+     * 通过在完整 CSS 加载前隐藏页面内容来防止首屏样式闪烁。
+     * 内联 `body { opacity: 0 }`，完整 CSS 加载后通过 `body { opacity: 1 }` 解锁显示。
+     */
+    foucGuard?: {
+      /**
+       * @en Enable FOUC guard. When disabled, no opacity hiding or fallback
+       * scripts will be injected.
+       * @zh 是否启用 FOUC 防护。禁用后不会注入 opacity 隐藏及兜底脚本。
+       * @default true
+       */
+      enabled?: boolean
+      /**
+       * @en Maximum wait time (ms) before force-showing the page, as a safety
+       * fallback in case CSS fails to load. Set to `0` to disable the timeout
+       * fallback (only `window.onload` will trigger reveal).
+       * @zh 最大等待时间（毫秒），作为 CSS 加载失败时的安全兜底。
+       * 设置为 `0` 可禁用超时兜底（仅依赖 `window.onload` 触发显示）。
+       * @default 5000
+       */
+      maxDuration?: number
+    }
   }
 
   /**
@@ -284,12 +311,6 @@ export interface ValaxyExtendConfig {
    * @see https://valaxy.site/guide/custom/hooks
    */
   hooks?: Partial<ValaxyHooks>
-
-  /**
-   * beastiesOptions
-   * @see https://github.com/danielroe/beasties
-   */
-  beastiesOptions?: BeastiesOptions
 
   /**
    * @experimental

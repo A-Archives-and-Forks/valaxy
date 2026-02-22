@@ -1,4 +1,5 @@
 import type { InlineConfig } from 'vite'
+import type { ViteSSGOptions } from 'vite-ssg'
 import type { ResolvedValaxyOptions, ValaxyNode } from './types'
 import { join, resolve } from 'node:path'
 import { consola } from 'consola'
@@ -39,13 +40,47 @@ export async function ssgBuild(
     },
   }
 
-  defaultConfig.ssgOptions = {
+  const inlineConfig: InlineConfig = mergeViteConfig(defaultConfig, viteConfig)
+
+  /**
+   * User ssgOptions from `vite.config.ts` or `valaxy.config.ts > vite.ssgOptions`.
+   *
+   * `vite-ssg` internally merges via `Object.assign({}, config.ssgOptions, ssgOptions)`,
+   * where the first argument (ssgOptions) takes priority over `config.ssgOptions`.
+   *
+   * We extract user ssgOptions from the resolved vite config, then:
+   * 1. Shallow-merge with Valaxy defaults (user wins on top-level keys)
+   * 2. Deep-merge `beastiesOptions` so user values extend (not replace) defaults
+   * 3. Compose `onFinished` to always run Valaxy's sitemap + user callback
+   *
+   * The merged result is passed as the first argument to `viteSsgBuild`,
+   * and `inlineConfig.ssgOptions` is deleted to prevent double-merging.
+   *
+   * @see https://github.com/antfu-collective/vite-ssg
+   */
+  const userSsgOptions: Partial<ViteSSGOptions> = inlineConfig.ssgOptions || {}
+
+  // Remove ssgOptions from viteConfig to avoid double-merging inside vite-ssg
+  delete inlineConfig.ssgOptions
+
+  const valaxySsgDefaults: Partial<ViteSSGOptions> = {
     script: 'async',
     formatting: 'minify',
     beastiesOptions: {
-      preload: 'swap',
+      /**
+       * Preload strategy for non-critical CSS.
+       *
+       * - `'media'`: Uses `<link rel="stylesheet" media="print" onload="this.media='all'">`.
+       *   The link stays as `rel="stylesheet"` so browsers handle it predictably;
+       *   JS-disabled users still get print styles as a fallback.
+       * - `'swap'` (previous default): Converts links to `<link rel="preload" onload='this.rel="stylesheet"'>`.
+       *   CSS relies entirely on JS `onload` callback, causing FOUC on slow networks.
+       *
+       * Other available strategies: `'body'`, `'swap-high'`, `'swap-low'`, `'js'`, `'js-lazy'`
+       * @see https://github.com/danielroe/beasties#preload
+       */
+      preload: 'media',
       // reduceInlineStyles: false,
-      ...(options.config.beastiesOptions || {}),
     },
     onFinished() {
       generateSitemap(
@@ -59,9 +94,35 @@ export async function ssgBuild(
     // dirStyle: 'nested',
   }
 
-  // generate static pages for pagination
+  // User ssgOptions override Valaxy defaults
+  // Users can customize beastiesOptions via `vite.ssgOptions.beastiesOptions`
+  const mergedSsgOptions: Partial<ViteSSGOptions> = {
+    ...valaxySsgDefaults,
+    ...userSsgOptions,
+  }
+
+  // Deep-merge beastiesOptions so user values extend (not replace) Valaxy defaults
+  if (userSsgOptions.beastiesOptions && valaxySsgDefaults.beastiesOptions) {
+    mergedSsgOptions.beastiesOptions = {
+      ...valaxySsgDefaults.beastiesOptions,
+      ...userSsgOptions.beastiesOptions,
+    }
+  }
+
+  // Compose onFinished: always run Valaxy's sitemap generation,
+  // then call the user's onFinished if provided
+  if (userSsgOptions.onFinished) {
+    const valaxyOnFinished = valaxySsgDefaults.onFinished!
+    const userOnFinished = userSsgOptions.onFinished
+    mergedSsgOptions.onFinished = async () => {
+      await valaxyOnFinished()
+      await userOnFinished()
+    }
+  }
+
+  // Generate static pages for pagination
   if (options.config.build.ssgForPagination) {
-    defaultConfig.ssgOptions.includedRoutes = (paths, _routes) => {
+    mergedSsgOptions.includedRoutes = (paths, _routes) => {
       const newPaths = paths
       const posts = paths.filter(path => path.startsWith('/posts/'))
       const pageNumber = Math.ceil(posts.length / options.config.siteConfig.pageSize)
@@ -70,16 +131,14 @@ export async function ssgBuild(
       for (let i = 1; i <= pageNumber; i++)
         newPaths.push(`/page/${i}`)
 
-      if (!options.config.vite?.ssgOptions?.includeAllRoutes)
+      if (!userSsgOptions.includeAllRoutes)
         return newPaths.filter(path => !path.split('/').some(p => p.startsWith(':')))
       else
         return newPaths
     }
   }
 
-  const inlineConfig: InlineConfig = mergeViteConfig(defaultConfig, viteConfig)
-
-  await viteSsgBuild({}, inlineConfig)
+  await viteSsgBuild(mergedSsgOptions, inlineConfig)
 }
 
 /**

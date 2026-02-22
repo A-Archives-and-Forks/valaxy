@@ -75,6 +75,39 @@ export async function getIndexHtml({ clientRoot, themeRoot, userRoot, config }: 
   </style>`
   }
 
+  /**
+   * FOUC (Flash of Unstyled Content) guard.
+   *
+   * Inline `body { opacity: 0 }` hides the page content until the full
+   * CSS bundle loads. The main stylesheet (`main.scss`) contains
+   * `body { opacity: 1 }` which overrides this once applied, producing
+   * a smooth fade-in via the inline `transition`.
+   *
+   * Fallbacks:
+   * - `<noscript>`: ensures page is visible when JS is disabled.
+   * - `window.onload`: reveals the page once all resources are loaded.
+   * - `setTimeout` (configurable `maxDuration`): safety net in case CSS
+   *   fails to load entirely; set to `0` to disable.
+   *
+   * @see build.foucGuard in ValaxyExtendConfig
+   */
+  const foucGuard = config.build.foucGuard ?? {}
+  const foucEnabled = foucGuard.enabled ?? true
+  const foucMaxDuration = foucGuard.maxDuration ?? 5000
+
+  if (foucEnabled) {
+    head += `<style type="text/css">body{opacity:0;transition:opacity .15s ease}</style>`
+    head += `<noscript><style>body{opacity:1!important}</style></noscript>`
+
+    const revealFn = `function __valaxyReveal(){document.body.style.opacity='1'}`
+    const onloadScript = `window.addEventListener('load',__valaxyReveal)`
+    const timeoutScript = foucMaxDuration > 0
+      ? `;setTimeout(__valaxyReveal,${foucMaxDuration})`
+      : ''
+
+    head += `<script>${revealFn};${onloadScript}${timeoutScript}</script>`
+  }
+
   if (config.siteConfig.lang) {
     head += `
     <script>

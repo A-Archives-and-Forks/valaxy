@@ -69,6 +69,68 @@ export default defineValaxyConfig<ThemeConfig>({
 })
 ```
 
+### Build
+
+:::: zh-CN
+
+`build` 字段用于配置 `valaxy build` 的构建行为。
+
+::::
+
+:::: en
+
+The `build` field configures the behavior of `valaxy build`.
+
+::::
+
+#### ssgForPagination
+
+:::: zh-CN
+
+启用后，Valaxy 会为分页页面生成独立的静态 HTML（如 `/page/1`、`/page/2` 等）。默认 `false`。
+
+::::
+
+:::: en
+
+When enabled, Valaxy generates static HTML for pagination pages (e.g., `/page/1`, `/page/2`). Default is `false`.
+
+::::
+
+#### foucGuard
+
+:::: zh-CN
+
+FOUC（Flash of Unstyled Content）防护配置。通过在 `<head>` 中内联 `body { opacity: 0 }` 来隐藏页面内容，待完整 CSS 加载后通过 `body { opacity: 1 }` 解锁显示，防止首屏样式闪烁。
+
+- `enabled`（默认 `true`）：是否启用 FOUC 防护
+- `maxDuration`（默认 `5000`）：最大等待时间（毫秒），作为 CSS 加载失败时的安全兜底。设为 `0` 可禁用超时兜底
+
+::::
+
+:::: en
+
+FOUC (Flash of Unstyled Content) guard. Inlines `body { opacity: 0 }` in `<head>` to hide page content until the full CSS loads, then reveals via `body { opacity: 1 }`.
+
+- `enabled` (default `true`): enable/disable the guard
+- `maxDuration` (default `5000`): max wait time (ms) before force-showing the page. Set to `0` to disable the timeout fallback
+
+::::
+
+```ts [valaxy.config.ts]
+import { defineValaxyConfig } from 'valaxy'
+
+export default defineValaxyConfig({
+  build: {
+    ssgForPagination: false,
+    foucGuard: {
+      enabled: true,
+      maxDuration: 5000,
+    },
+  },
+})
+```
+
 ### @vitejs/plugin-vue
 
 Valaxy 默认集成了 [`@vitejs/plugin-vue`](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) 插件，你可以通过 `vue` 配置项进行配置。
@@ -98,6 +160,88 @@ export default defineValaxyConfig({
   vite: {
     plugins: []
   }
+})
+```
+
+### SSG Options
+
+::: zh-CN
+
+Valaxy 使用 [vite-ssg](https://github.com/antfu-collective/vite-ssg) 进行静态站点生成。
+你可以通过 `vite.ssgOptions` 自定义 SSG 行为。
+
+:::
+
+::: en
+
+Valaxy uses [vite-ssg](https://github.com/antfu-collective/vite-ssg) for Static Site Generation.
+You can customize SSG behavior via `vite.ssgOptions`.
+
+:::
+
+::: zh-CN
+
+Valaxy 默认设置了以下 SSG 选项，用户配置会覆盖这些默认值：
+
+- `script`: `'async'` — 脚本加载模式
+- `formatting`: `'minify'` — HTML 输出格式
+- `beastiesOptions.preload`: `'media'` — 非关键 CSS 预加载策略（[详见 beasties](https://github.com/danielroe/beasties#preload)）
+- `onFinished` — 构建完成后自动生成 sitemap（始终执行，用户回调会在其后运行）
+
+完整参数列表请参见 [ViteSSGOptions](https://github.com/antfu-collective/vite-ssg)。
+
+:::
+
+::: en
+
+Valaxy sets the following SSG defaults. User values override them:
+
+- `script`: `'async'` — script loading mode
+- `formatting`: `'minify'` — HTML output formatting
+- `beastiesOptions.preload`: `'media'` — non-critical CSS preload strategy ([see beasties](https://github.com/danielroe/beasties#preload))
+- `onFinished` — auto-generates sitemap after build (always runs; user callback runs after it)
+
+See [ViteSSGOptions](https://github.com/antfu-collective/vite-ssg) for the full parameter list.
+
+:::
+
+```ts [valaxy.config.ts]
+import { defineValaxyConfig } from 'valaxy'
+
+export default defineValaxyConfig({
+  vite: {
+    ssgOptions: {
+      // 输出目录风格: 'flat' | 'nested'
+      // flat: /foo → /foo.html
+      // nested: /foo → /foo/index.html
+      dirStyle: 'nested',
+
+      // 关键 CSS 内联 (beasties) 配置
+      // 设为 false 可完全禁用
+      beastiesOptions: {
+        preload: 'media',
+      },
+
+      // 构建完成后的回调（Valaxy 的 sitemap 生成始终会先执行）
+      async onFinished() {
+        console.log('SSG build finished!')
+      },
+
+      // 自定义要生成的路由
+      // includedRoutes(paths, routes) {
+      //   return paths.filter(p => !p.includes(':'))
+      // },
+
+      // 脚本加载模式: 'sync' | 'async' | 'defer' | 'async defer'
+      // script: 'async',
+
+      // HTML 格式化: 'none' | 'minify' | 'prettify'
+      // formatting: 'minify',
+
+      // SSG 并发数
+      // concurrency: 20,
+    },
+  },
 })
 ```
 

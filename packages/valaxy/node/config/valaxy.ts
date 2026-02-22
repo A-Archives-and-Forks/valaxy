@@ -23,6 +23,10 @@ export const defaultValaxyConfig: ValaxyNodeConfig = {
 
   build: {
     ssgForPagination: false,
+    foucGuard: {
+      enabled: true,
+      maxDuration: 5000,
+    },
   },
 
   deploy: { },

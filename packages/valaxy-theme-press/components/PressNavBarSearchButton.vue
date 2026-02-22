@@ -1,19 +1,9 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-
 defineProps<{
   text?: string
   ariaLabel?: string
   ariaKeyshortcuts?: string
 }>()
-
-const metaKey = ref('Ctrl')
-
-onMounted(() => {
-  const isMac = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
-  if (isMac)
-    metaKey.value = '\u2318'
-})
 </script>
 
 <template>
@@ -36,8 +26,9 @@ onMounted(() => {
       </svg>
       <span class="PressSearchButton-text">{{ text || 'Search' }}</span>
     </span>
-    <span class="PressSearchButton-keys">
-      <kbd>{{ metaKey }}</kbd>
+    <span class="PressSearchButton-keys" aria-hidden="true">
+      <kbd class="key-cmd">&#x2318;</kbd>
+      <kbd class="key-ctrl">Ctrl</kbd>
       <kbd>K</kbd>
     </span>
   </button>
@@ -139,6 +130,11 @@ onMounted(() => {
   direction: ltr;
   display: none;
   min-width: auto;
+}
+
+:root.mac .key-ctrl,
+:root:not(.mac) .key-cmd {
+  display: none;
 }
 
 @media (width >= 768px) {
