@@ -21,7 +21,7 @@ function ThemeVitePlugin(options: ResolvedValaxyOptions<ThemeConfig>): Plugin {
         },
 
         optimizeDeps: {
-          exclude: ['@docsearch/js'],
+          exclude: ['@docsearch/css', '@docsearch/js', '@docsearch/sidepanel-js'],
         },
       }
     },

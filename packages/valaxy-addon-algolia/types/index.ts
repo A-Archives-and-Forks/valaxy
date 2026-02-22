@@ -1,9 +1,103 @@
 /**
  * Algolia search options. Partially copied from
  * `@docsearch/react/dist/esm/DocSearch.d.ts`
+ *
+ * @see https://vitepress.dev/reference/default-theme-search
  */
 export interface AlgoliaSearchOptions extends DocSearchProps {
   locales?: Record<string, Partial<DocSearchProps>>
+  /**
+   * Configuration or assistant id to enable Ask AI mode.
+   * Pass a string (assistant id) or a full config object.
+   * Omit to disable the Ask AI button entirely.
+   *
+   * @see https://vitepress.dev/reference/default-theme-search#ask-ai
+   */
+  askAi?: AlgoliaAskAiOptions | string
+  /**
+   * Ask AI side panel integration mode.
+   *
+   * - `'auto'`: infer hybrid vs sidePanel-only from provided config
+   * - `'sidePanel'`: force sidePanel-only even if keyword search is configured
+   * - `'hybrid'`: force hybrid (keyword search modal + Ask AI side panel)
+   * - `'modal'`: force modal even if sidePanel is configured
+   *
+   * @default 'auto'
+   */
+  mode?: 'auto' | 'sidePanel' | 'hybrid' | 'modal'
+}
+
+export interface AlgoliaAskAiOptions {
+  /**
+   * The assistant ID to use for the Ask AI feature.
+   */
+  assistantId: string
+  /**
+   * Algolia application ID for Ask AI (defaults to the main `appId`).
+   */
+  appId?: string
+  /**
+   * Algolia API key for Ask AI (defaults to the main `apiKey`).
+   */
+  apiKey?: string
+  /**
+   * Algolia index name for Ask AI (defaults to the main `indexName`).
+   */
+  indexName?: string
+  /**
+   * Enables displaying suggested questions on Ask AI's new conversation screen.
+   *
+   * @default false
+   */
+  suggestedQuestions?: boolean
+  /**
+   * Ask AI side panel configuration.
+   * Set to `true` for default configuration, or pass a custom config object.
+   *
+   * @see https://vitepress.dev/reference/default-theme-search#ask-ai-side-panel
+   */
+  sidePanel?: boolean | AlgoliaSidepanelOptions
+}
+
+export interface AlgoliaSidepanelOptions {
+  /**
+   * Sidepanel button configuration (visibility, text, etc.).
+   */
+  button?: Record<string, any>
+  /**
+   * Keyboard shortcuts configuration.
+   * Set a shortcut to `false` to disable it.
+   *
+   * @example { 'Ctrl/Cmd+I': false }
+   */
+  keyboardShortcuts?: Record<string, boolean>
+  /**
+   * Sidepanel panel configuration.
+   */
+  panel?: {
+    /**
+     * Panel variant.
+     * @default 'floating'
+     */
+    variant?: 'floating' | 'inline'
+    /**
+     * Panel position side.
+     * @default 'right'
+     */
+    side?: 'left' | 'right'
+    /**
+     * Panel default width.
+     */
+    width?: string
+    /**
+     * Panel expanded width.
+     */
+    expandedWidth?: string
+    /**
+     * Whether to show suggested questions.
+     */
+    suggestedQuestions?: boolean
+  }
 }
 
 export interface DocSearchProps {

@@ -7,7 +7,7 @@ defineProps<{
 
 <template>
   <button type="button" class="PressNavBarAskAiButton" :aria-label="ariaLabel || 'Ask AI'" :aria-keyshortcuts="ariaKeyshortcuts">
-    <span i-ri-sparkle-line aria-hidden="true" />
+    <span i-ri-sparkling-line aria-hidden="true" />
   </button>
 </template>
 

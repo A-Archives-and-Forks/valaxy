@@ -1,262 +1,274 @@
-<script lang="ts" setup>
-import { useAddonAlgolia } from 'valaxy-addon-algolia'
-import { onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+<script setup lang="ts">
+import type { DocSearchInstance, DocSearchProps } from '@docsearch/js'
+import type { SidepanelInstance, SidepanelProps } from '@docsearch/sidepanel-js'
+import type { AlgoliaSearchOptions } from 'valaxy-addon-algolia'
+import { useAddonAlgoliaConfig } from 'valaxy-addon-algolia'
+import { nextTick, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
-const { t } = useI18n()
+import '../styles/docsearch.css'
 
-const { loaded, load, dispatchEvent } = useAddonAlgolia()
+const props = defineProps<{
+  openRequest?: {
+    target: 'search' | 'askAi' | 'toggleAskAi'
+    nonce: number
+  } | null
+}>()
 
-defineExpose({
-  loaded,
-  load,
-  dispatchEvent,
-})
+const router = useRouter()
+const algoliaConfig = useAddonAlgoliaConfig()
 
-function isEditingContent(event: KeyboardEvent): boolean {
-  const element = event.target as HTMLElement
-  const tagName = element.tagName
+let cleanup = () => {}
+let docsearchInstance: DocSearchInstance | undefined
+let sidepanelInstance: SidepanelInstance | undefined
+let openOnReady: 'search' | 'askAi' | null = null
+let initializeCount = 0
+let docsearchLoader: Promise<typeof import('@docsearch/js')> | undefined
+let sidepanelLoader: Promise<typeof import('@docsearch/sidepanel-js')> | undefined
+let lastFocusedElement: HTMLElement | null = null
+let skipEventDocsearch = false
+let skipEventSidepanel = false
 
-  return (
-    element.isContentEditable
-    || tagName === 'INPUT'
-    || tagName === 'SELECT'
-    || tagName === 'TEXTAREA'
-  )
+watch(
+  () => algoliaConfig.value?.options,
+  (options) => {
+    if (options)
+      update(options)
+  },
+  { immediate: true },
+)
+
+onUnmounted(cleanup)
+
+watch(
+  () => props.openRequest?.nonce,
+  () => {
+    const req = props.openRequest
+    if (!req)
+      return
+
+    if (req.target === 'search') {
+      if (docsearchInstance?.isReady) {
+        onBeforeOpen('docsearch', () => docsearchInstance?.open())
+      }
+      else {
+        openOnReady = 'search'
+      }
+    }
+    else if (req.target === 'toggleAskAi') {
+      if (sidepanelInstance?.isOpen) {
+        sidepanelInstance.close()
+      }
+      else {
+        onBeforeOpen('sidepanel', () => sidepanelInstance?.open())
+      }
+    }
+    else {
+      // askAi - open sidepanel or fallback to docsearch modal
+      if (sidepanelInstance?.isReady) {
+        onBeforeOpen('sidepanel', () => sidepanelInstance?.open())
+      }
+      else if (sidepanelInstance) {
+        openOnReady = 'askAi'
+      }
+      else if (docsearchInstance?.isReady) {
+        onBeforeOpen('docsearch', () => docsearchInstance?.openAskAi())
+      }
+      else {
+        openOnReady = 'askAi'
+      }
+    }
+  },
+  { immediate: true },
+)
+
+async function update(options: AlgoliaSearchOptions) {
+  await nextTick()
+
+  // Normalize askAi: string -> { assistantId }
+  const askAi = typeof options.askAi === 'string'
+    ? { assistantId: options.askAi }
+    : options.askAi || undefined
+
+  const appId = options.appId ?? askAi?.appId
+  const apiKey = options.apiKey ?? askAi?.apiKey
+  const indexName = options.indexName ?? askAi?.indexName
+
+  if (!appId || !apiKey || !indexName) {
+    console.warn('[valaxy-theme-press] Algolia search cannot be initialized: missing appId/apiKey/indexName.')
+    return
+  }
+
+  await initialize({ ...options, appId, apiKey, indexName })
 }
 
-onMounted(() => {
-  const handleSearchHotKey = (event: KeyboardEvent) => {
-    if (
-      (event.key?.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey))
-      || (!isEditingContent(event) && event.key === '/')
-    ) {
-      event.preventDefault()
-      load()
-      // eslint-disable-next-line ts/no-use-before-define
-      remove()
+async function initialize(userOptions: AlgoliaSearchOptions) {
+  const currentInitialize = ++initializeCount
+
+  // Always tear down previous instances first
+  cleanup()
+
+  const { askAi: _askAi, locales: _locales, mode: _mode, ...docSearchUserOptions } = userOptions
+  // Normalize askAi: string -> { assistantId }
+  const askAi = typeof _askAi === 'string'
+    ? { assistantId: _askAi }
+    : _askAi || undefined
+
+  const { default: docsearch } = await loadDocsearch()
+  if (currentInitialize !== initializeCount)
+    return
+
+  // Initialize sidepanel if askAi.sidePanel is configured
+  if (askAi?.sidePanel) {
+    const { default: sidepanel } = await loadSidepanel()
+    if (currentInitialize !== initializeCount)
+      return
+
+    const sidePanelConfig = askAi.sidePanel === true ? {} : askAi.sidePanel
+
+    sidepanelInstance = sidepanel({
+      ...sidePanelConfig,
+      container: '#press-docsearch-sidepanel',
+      indexName: askAi.indexName ?? docSearchUserOptions.indexName,
+      appId: askAi.appId ?? docSearchUserOptions.appId,
+      apiKey: askAi.apiKey ?? docSearchUserOptions.apiKey,
+      assistantId: askAi.assistantId,
+      onOpen: focusInput,
+      onClose: onClose.bind(null, 'sidepanel'),
+      onReady: () => {
+        if (openOnReady === 'askAi') {
+          openOnReady = null
+          onBeforeOpen('sidepanel', () => sidepanelInstance?.open())
+        }
+      },
+      keyboardShortcuts: {
+        'Ctrl/Cmd+I': false,
+      },
+    } as SidepanelProps)
+  }
+
+  const options: DocSearchProps = {
+    ...docSearchUserOptions as DocSearchProps,
+    container: '#press-docsearch',
+    navigator: {
+      navigate(item) {
+        const { pathname, hash } = new URL(item.itemUrl, location.origin)
+        router.push(pathname + hash)
+      },
+    },
+    transformItems: items =>
+      items.map(item => ({
+        ...item,
+        url: getRelativePath(item.url),
+      })),
+    // When sidepanel is enabled, intercept Ask AI events to open it instead
+    ...(sidepanelInstance && {
+      interceptAskAiEvent: (initialMessage: any) => {
+        onBeforeOpen('sidepanel', () => sidepanelInstance?.open(initialMessage))
+        return true
+      },
+    }),
+    onOpen: focusInput,
+    onClose: onClose.bind(null, 'docsearch'),
+    onReady: () => {
+      if (openOnReady === 'search') {
+        openOnReady = null
+        onBeforeOpen('docsearch', () => docsearchInstance?.open())
+      }
+      else if (openOnReady === 'askAi' && !sidepanelInstance) {
+        openOnReady = null
+        onBeforeOpen('docsearch', () => docsearchInstance?.openAskAi())
+      }
+    },
+    keyboardShortcuts: {
+      '/': false,
+      'Ctrl/Cmd+K': false,
+    },
+  }
+
+  docsearchInstance = docsearch(options)
+
+  cleanup = () => {
+    docsearchInstance?.destroy()
+    sidepanelInstance?.destroy()
+    docsearchInstance = undefined
+    sidepanelInstance = undefined
+    openOnReady = null
+    lastFocusedElement = null
+  }
+}
+
+function focusInput() {
+  requestAnimationFrame(() => {
+    const input
+      = document.querySelector<HTMLInputElement>('#docsearch-input')
+        || document.querySelector<HTMLInputElement>('#docsearch-sidepanel textarea')
+    input?.focus()
+  })
+}
+
+function onBeforeOpen(target: 'docsearch' | 'sidepanel', cb: () => void) {
+  if (target === 'docsearch') {
+    if (sidepanelInstance?.isOpen) {
+      skipEventSidepanel = true
+      sidepanelInstance.close()
+    }
+    else if (!docsearchInstance?.isOpen) {
+      if (document.activeElement instanceof HTMLElement)
+        lastFocusedElement = document.activeElement
     }
   }
-
-  const remove = () => {
-    window.removeEventListener('keydown', handleSearchHotKey)
+  else if (target === 'sidepanel') {
+    if (docsearchInstance?.isOpen) {
+      skipEventDocsearch = true
+      docsearchInstance.close()
+    }
+    else if (!sidepanelInstance?.isOpen) {
+      if (document.activeElement instanceof HTMLElement)
+        lastFocusedElement = document.activeElement
+    }
   }
+  setTimeout(cb, 0)
+}
 
-  window.addEventListener('keydown', handleSearchHotKey)
+function onClose(target: 'docsearch' | 'sidepanel') {
+  if (target === 'docsearch') {
+    if (skipEventDocsearch) {
+      skipEventDocsearch = false
+      return
+    }
+  }
+  else if (target === 'sidepanel') {
+    if (skipEventSidepanel) {
+      skipEventSidepanel = false
+      return
+    }
+  }
+  if (lastFocusedElement) {
+    lastFocusedElement.focus()
+    lastFocusedElement = null
+  }
+}
 
-  onUnmounted(remove)
-})
+function loadDocsearch() {
+  if (!docsearchLoader)
+    docsearchLoader = import('@docsearch/js')
+  return docsearchLoader
+}
+
+function loadSidepanel() {
+  if (!sidepanelLoader)
+    sidepanelLoader = import('@docsearch/sidepanel-js')
+  return sidepanelLoader
+}
+
+function getRelativePath(url: string) {
+  const { pathname, hash } = new URL(url, location.origin)
+  return pathname.replace(/\.html$/, '') + hash
+}
 </script>
 
 <template>
-  <div>
-    <AlgoliaSearchBox v-if="loaded" />
-
-    <div v-else id="docsearch" @click="load">
-      <button
-        class="DocSearch DocSearch-Button"
-        aria-label="Search"
-      >
-        <span class="DocSearch-Button-Container">
-          <svg
-            class="DocSearch-Search-Icon"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-          >
-            <path
-              d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z"
-              stroke="currentColor"
-              fill="none"
-              fill-rule="evenodd"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <span class="DocSearch-Button-Placeholder">{{ t('search.placeholder') }}</span>
-        </span>
-        <span class="DocSearch-Button-Keys">
-          <kbd class="DocSearch-Button-Key" />
-          <kbd class="DocSearch-Button-Key">K</kbd>
-        </span>
-      </button>
-    </div>
-  </div>
+  <div id="press-docsearch" />
+  <div id="press-docsearch-sidepanel" />
 </template>
-
-<style>
-/* stylelint-disable selector-class-pattern */
-.DocSearch-Button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  width: 32px;
-  height: 55px;
-  background: transparent;
-  transition: border-color 0.25s;
-}
-
-.DocSearch-Button:hover {
-  background: transparent;
-}
-
-.DocSearch-Button:focus {
-  outline: 1px dotted;
-  outline: 5px auto -webkit-focus-ring-color;
-}
-
-.DocSearch-Button-Key--pressed {
-  transform: none;
-  box-shadow: none;
-}
-
-.DocSearch-Button:focus:not(:focus-visible) {
-  outline: none !important;
-}
-
-@media (width >= 768px) {
-  .DocSearch-Button {
-    justify-content: flex-start;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 0 10px 0 12px;
-    width: 100%;
-    height: 40px;
-    background-color: var(--va-c-bg-alt);
-  }
-
-  .DocSearch-Button:hover {
-    border-color: var(--va-c-brand);
-    background: var(--va-c-bg-alt);
-  }
-}
-
-.DocSearch-Button .DocSearch-Button-Container {
-  display: flex;
-  align-items: center;
-}
-
-.DocSearch-Button .DocSearch-Search-Icon {
-  position: relative;
-  width: 16px;
-  height: 16px;
-  color: var(--va-c-text-1);
-  fill: currentcolor;
-  transition: color 0.5s;
-}
-
-.DocSearch-Button:hover .DocSearch-Search-Icon {
-  color: var(--va-c-text-1);
-}
-
-@media (width >= 768px) {
-  .DocSearch-Button .DocSearch-Search-Icon {
-    top: 1px;
-    margin-right: 8px;
-    width: 14px;
-    height: 14px;
-    color: var(--va-c-text-2);
-  }
-}
-
-.DocSearch-Button .DocSearch-Button-Placeholder {
-  display: none;
-  margin-top: 2px;
-  padding: 0 16px 0 0;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--va-c-text-2);
-  transition: color 0.5s;
-}
-
-.DocSearch-Button:hover .DocSearch-Button-Placeholder {
-  color: var(--va-c-text-1);
-}
-
-@media (width >= 768px) {
-  .DocSearch-Button .DocSearch-Button-Placeholder {
-    display: inline-block;
-  }
-}
-
-.DocSearch-Button .DocSearch-Button-Keys {
-  /* rtl:ignore */
-  direction: ltr;
-  display: none;
-  min-width: auto;
-}
-
-@media (width >= 768px) {
-  .DocSearch-Button .DocSearch-Button-Keys {
-    display: flex;
-    align-items: center;
-  }
-}
-
-.DocSearch-Button .DocSearch-Button-Key {
-  display: block;
-  margin: 2px 0 0;
-  border: 1px solid var(--va-c-divider);
-
-  /* rtl:begin:ignore */
-  border-right: none;
-  border-radius: 4px 0 0 4px;
-  padding-left: 6px;
-
-  /* rtl:end:ignore */
-  min-width: 0;
-  width: auto;
-  height: 22px;
-  font-family: var(--va-font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  transition: color 0.5s, border-color 0.5s;
-}
-
-.DocSearch-Button .DocSearch-Button-Key + .DocSearch-Button-Key {
-  /* rtl:begin:ignore */
-  border-right: 1px solid var(--va-c-divider);
-  border-left: none;
-  border-radius: 0 4px 4px 0;
-  padding-left: 2px;
-  padding-right: 6px;
-
-  /* rtl:end:ignore */
-}
-
-.DocSearch-Button .DocSearch-Button-Key:first-child {
-  font-size: 1px;
-  letter-spacing: -12px;
-  color: transparent;
-}
-
-.DocSearch-Button .DocSearch-Button-Key:first-child::after {
-  content: 'Ctrl';
-  font-size: 12px;
-  letter-spacing: normal;
-  color: var(--docsearch-muted-color);
-}
-
-.mac .DocSearch-Button .DocSearch-Button-Key:first-child::after {
-  content: '\2318';
-}
-
-.DocSearch-Button .DocSearch-Button-Key:first-child > * {
-  display: none;
-}
-
-.dark .DocSearch-Footer {
-  border-top: 1px solid var(--va-c-divider);
-}
-
-.DocSearch-Form {
-  border: 1px solid var(--va-c-brand);
-  background-color: var(--va-c-white);
-}
-
-.dark .DocSearch-Form {
-  background-color: var(--va-c-bg-soft-mute);
-}
-</style>

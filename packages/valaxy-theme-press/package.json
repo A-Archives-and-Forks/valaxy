@@ -24,6 +24,7 @@
   "dependencies": {
     "@docsearch/css": "catalog:",
     "@docsearch/js": "catalog:",
+    "@docsearch/sidepanel-js": "catalog:",
     "reka-ui": "catalog:frontend"
   },
   "devDependencies": {

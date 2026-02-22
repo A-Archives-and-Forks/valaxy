@@ -24,11 +24,21 @@ export async function parseAddons(addons: ValaxyAddons, userRoot = process.cwd()
   if (Array.isArray(addons)) {
     for (const addon of addons) {
       if (typeof addon === 'string') {
-        mergeResolver(await readAddonModule(addon, { cwd: userRoot }))
+        const resolver = await readAddonModule(addon, { cwd: userRoot })
+        if (resolver)
+          mergeResolver(resolver)
         continue
       }
-      if (typeof addon === 'object')
-        mergeResolver(defu(await readAddonModule(addon.name, { cwd: userRoot }), addon || {}))
+      if (typeof addon === 'object') {
+        const resolver = await readAddonModule(addon.name, { cwd: userRoot })
+        if (!resolver)
+          continue
+        // Merge with user config, ensuring user's global setting takes precedence
+        // resolver provides all required fields, addon overrides them
+        // We use as-cast because defu cannot infer the correct type when merging partial and complete objects
+        const merged = defu(addon || {}, resolver) as ValaxyAddonResolver
+        mergeResolver(merged)
+      }
     }
   }
 
