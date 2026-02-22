@@ -8,11 +8,23 @@ categories:
 
 ::: tip
 
+<div lang="zh-CN">
 扩展配置是 Valaxy 提供的高阶配置，允许你自定义更多与底层/构建相关的配置。
+</div>
+
+<div lang="en">
+Extend Config is an advanced configuration provided by Valaxy, allowing you to customize more low-level and build-related settings.
+</div>
 
 :::
 
+::: zh-CN
 以下是所有的扩展配置项与相关类型。
+:::
+
+::: en
+Below are all the extend configuration options and related types.
+:::
 
 > [packages/valaxy/node/types/index.ts](https://github.com/YunYouJun/valaxy/blob/main/packages/valaxy/node/types/index.ts)
 
@@ -101,7 +113,7 @@ When enabled, Valaxy generates static HTML for pagination pages (e.g., `/page/1`
 
 :::: zh-CN
 
-FOUC（Flash of Unstyled Content）防护配置。通过在 `<head>` 中内联 `body { opacity: 0 }` 来隐藏页面内容，待完整 CSS 加载后通过 `body { opacity: 1 }` 解锁显示，防止首屏样式闪烁。
+FOUC（Flash of Unstyled Content）防护配置。通过在 `<head>` 中内联 `body { opacity: 0 !important }` 隐藏页面，并通过 JS 监测所有样式表（包括 beasties 异步加载的样式表）加载完成后，移除该隐藏样式标签以显示页面，防止首屏样式闪烁和样式分批渲染的问题。
 
 - `enabled`（默认 `true`）：是否启用 FOUC 防护
 - `maxDuration`（默认 `5000`）：最大等待时间（毫秒），作为 CSS 加载失败时的安全兜底。设为 `0` 可禁用超时兜底
@@ -110,7 +122,7 @@ FOUC（Flash of Unstyled Content）防护配置。通过在 `<head>` 中内联 `
 
 :::: en
 
-FOUC (Flash of Unstyled Content) guard. Inlines `body { opacity: 0 }` in `<head>` to hide page content until the full CSS loads, then reveals via `body { opacity: 1 }`.
+FOUC (Flash of Unstyled Content) guard. Inlines `body { opacity: 0 !important }` in `<head>` and uses JS to monitor all stylesheets (including async ones loaded by beasties) until they finish loading, then removes the hidden style tag to reveal the page with a smooth fade-in.
 
 - `enabled` (default `true`): enable/disable the guard
 - `maxDuration` (default `5000`): max wait time (ms) before force-showing the page. Set to `0` to disable the timeout fallback
@@ -133,7 +145,13 @@ export default defineValaxyConfig({
 
 ### @vitejs/plugin-vue
 
+::: zh-CN
 Valaxy 默认集成了 [`@vitejs/plugin-vue`](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) 插件，你可以通过 `vue` 配置项进行配置。
+:::
+
+::: en
+Valaxy integrates [`@vitejs/plugin-vue`](https://github.com/vitejs/vite-plugin-vue/tree/main/packages/plugin-vue) by default. You can configure it via the `vue` option.
+:::
 
 ```ts [valaxy.config.ts]
 import { defineValaxyConfig } from 'valaxy'
@@ -151,7 +169,13 @@ export default defineValaxyConfig({
 
 ### Vite
 
+::: zh-CN
 你可以参见 [Vite 文档](https://vite.dev/config/shared-options.html) 自定义 Vite 相关配置。
+:::
+
+::: en
+You can refer to the [Vite documentation](https://vite.dev/config/shared-options.html) to customize Vite-related configurations.
+:::
 
 ```ts [valaxy.config.ts]
 import { defineValaxyConfig } from 'valaxy'
@@ -247,9 +271,17 @@ export default defineValaxyConfig({
 
 ### Markdown
 
+::: zh-CN
 可自定义 Markdown 相关配置，如代码主题、区块内容、添加 `markdown-it` 插件、transformer 等。
 
 效果参见: [Markdown](/guide/markdown)。
+:::
+
+::: en
+You can customize Markdown-related configurations, such as code themes, block content, adding `markdown-it` plugins, transformers, etc.
+
+See the effect at: [Markdown](/guide/markdown).
+:::
 
 ::: details valaxy/node/plugins/markdown/types.ts
 
@@ -310,15 +342,35 @@ export default defineValaxyConfig({
 
 ### DevTools
 
+::: zh-CN
 设置 `devtools: false` 以关闭 DevTools。
+:::
 
-### 插件 addons
+::: en
+Set `devtools: false` to disable DevTools.
+:::
 
+### 插件 Addons {lang="zh-CN"}
+
+### Addons {lang="en"}
+
+::: zh-CN
 参见 [使用插件](/addons/use)。
+:::
+
+::: en
+See [Using Addons](/addons/use).
+:::
 
 ### UnoCSS
 
+::: zh-CN
 参见 [UnoCSS](/guide/config/unocss-options)。
+:::
+
+::: en
+See [UnoCSS](/guide/config/unocss-options).
+:::
 
 ### Modules
 
@@ -475,7 +527,7 @@ This option only takes effect during `valaxy build`, not in dev mode.
 
 :::
 
-::: tip
+:::: tip
 
 ::: zh-CN
 `cdn.modules` 中的每个模块需要提供以下字段：
@@ -497,22 +549,18 @@ Each module in `cdn.modules` requires the following fields:
 - `exports` (optional): named exports to re-export from the global variable (e.g., `['ref', 'computed']`)
 :::
 
-:::
+::::
+
+#### 示例：通过 CDN 加载 KaTeX {lang="zh-CN"}
+
+#### Example: Load KaTeX from CDN {lang="en"}
 
 ::: zh-CN
-
-#### 示例：通过 CDN 加载 KaTeX
-
 KaTeX 默认会被打包进构建产物。如果你希望通过 CDN 加载 KaTeX 以减小打包体积，可以如下配置：
-
 :::
 
 ::: en
-
-#### Example: Load KaTeX from CDN
-
 KaTeX is bundled into the build output by default. If you want to load it from CDN to reduce bundle size, you can configure it as follows:
-
 :::
 
 ```ts [valaxy.config.ts]
