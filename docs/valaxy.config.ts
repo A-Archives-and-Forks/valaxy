@@ -63,7 +63,9 @@ export default defineValaxyConfig<PressTheme.Config>({
       indexName: 'valaxysite',
     }),
     addonComponents(),
-    addonMeting(),
+    addonMeting({
+      global: false,
+    }),
     addonGitLog({
       contributor: {
         strategy: 'prebuilt',
