@@ -32,8 +32,44 @@ export async function ViteValaxyPlugins(
   const { options } = valaxyApp
   const { roots, config: valaxyConfig } = options
 
-  const MarkdownPlugin = await createMarkdownPlugin(options)
-  const ValaxyPlugin = await createValaxyPlugin(options, serverOptions)
+  // Parallelise heavy async plugin initialisations.
+  // createMarkdownPlugin (shiki highlighter) and createUnocssPlugin (jiti config
+  // loading) are the two slowest — running them concurrently with the other
+  // async factories cuts total startup time significantly.
+  const [
+    MarkdownPlugin,
+    ValaxyPlugin,
+    vuePlugin,
+    RouterPlugin,
+    UnocssPlugin,
+    LocalSearchPlugin,
+  ] = await Promise.all([
+    createMarkdownPlugin(options),
+    createValaxyPlugin(options, serverOptions),
+    import('@vitejs/plugin-vue').then(r =>
+      r.default({
+        include: /\.(?:vue|md)$/,
+        exclude: [],
+        ...valaxyConfig.vue,
+        template: {
+          ...valaxyConfig.vue?.template,
+          compilerOptions: {
+            ...valaxyConfig.vue?.template?.compilerOptions,
+            isCustomElement: (tag) => {
+              let is = customElements.has(tag)
+              valaxyConfig.vue?.isCustomElement?.forEach((fn) => {
+                is = is || fn(tag)
+              })
+              return is
+            },
+          },
+        },
+      }),
+    ),
+    createRouterPlugin(valaxyApp),
+    createUnocssPlugin(options),
+    localSearchPlugin(options),
+  ])
 
   /**
    * for unplugin-vue-components
@@ -41,33 +77,6 @@ export async function ViteValaxyPlugins(
   const componentsDirs = roots
     .map(root => `${root}/components`)
     .concat(['src/components', 'components'])
-
-  // if (valaxyApp.options.mode === 'dev') {
-  //   const devtoolsDir = path.dirname(await resolveImportPath('@valaxyjs/devtools/package.json'))
-  //   const devtoolsComponentsDir = path.resolve(devtoolsDir, 'src/client/components')
-  //   componentsDirs.push(devtoolsComponentsDir)
-  // }
-
-  const vuePlugin = await import('@vitejs/plugin-vue').then(r =>
-    r.default({
-      include: /\.(?:vue|md)$/,
-      exclude: [],
-      ...valaxyConfig.vue,
-      template: {
-        ...valaxyConfig.vue?.template,
-        compilerOptions: {
-          ...valaxyConfig.vue?.template?.compilerOptions,
-          isCustomElement: (tag) => {
-            let is = customElements.has(tag)
-            valaxyConfig.vue?.isCustomElement?.forEach((fn) => {
-              is = is || fn(tag)
-            })
-            return is
-          },
-        },
-      },
-    }),
-  )
 
   const plugins: (PluginOption | PluginOption[])[] = [
     createCdnPlugin(options),
@@ -82,7 +91,7 @@ export async function ViteValaxyPlugins(
     UnheadVite(),
 
     // https://github.com/posva/unplugin-vue-router
-    await createRouterPlugin(valaxyApp),
+    RouterPlugin,
 
     // https://github.com/JohnCampionJr/vite-plugin-vue-layouts
     Layouts({
@@ -117,10 +126,7 @@ export async function ViteValaxyPlugins(
     }),
 
     // https://github.com/antfu/unocss
-    // UnocssPlugin,
-    await createUnocssPlugin(options),
-
-    // ...MarkdownPlugin,
+    UnocssPlugin,
 
     // https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n
     VueI18n({
@@ -133,7 +139,7 @@ export async function ViteValaxyPlugins(
     createFixPlugins(options),
 
     // localSearch
-    await localSearchPlugin(options),
+    LocalSearchPlugin,
   ]
 
   if (valaxyConfig.visualizer) {

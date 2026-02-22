@@ -20,25 +20,24 @@ export function foucGuardHtml(maxDuration: number) {
 
 /**
  * This function is serialized via `.toString()` and inlined into `<head>`.
- * It runs in the browser — do NOT use any Node/TS APIs or outer-scope references.
+ * It runs in the browser — do NOT reference outer-scope variables,
+ * Node/TS-only APIs, or anything unavailable in a raw `<script>` context.
  */
+/* eslint-disable no-var, vars-on-top, antfu/if-newline */
 function foucGuardScript(maxDuration: number) {
-  let done = 0
+  var done = 0
 
   function reveal() {
-    if (done)
-      return
+    if (done) return
     done = 1
-    const s = document.getElementById('valaxy-fouc')
-    if (s)
-      s.remove()
+    var s = document.getElementById('valaxy-fouc')
+    if (s) s.remove()
   }
 
   function check() {
-    const links = document.querySelectorAll('link[rel="stylesheet"]')
-    for (let i = 0; i < links.length; i++) {
-      if (!links[i].sheet)
-        return
+    var links: NodeListOf<HTMLLinkElement> = document.querySelectorAll('link[rel="stylesheet"]')
+    for (var i = 0; i < links.length; i++) {
+      if (!links[i].sheet) return
     }
     reveal()
   }
@@ -54,3 +53,4 @@ function foucGuardScript(maxDuration: number) {
   if (maxDuration)
     setTimeout(reveal, maxDuration)
 }
+/* eslint-enable no-var, vars-on-top, antfu/if-newline */

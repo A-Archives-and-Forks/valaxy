@@ -34,10 +34,14 @@ export async function createServer(
     ...plugins,
   ]
   if (enableDevtools) {
-    // only enable when dev
+    // only enable when dev — import both in parallel
+    const [vueDevtools, valaxyDevtools] = await Promise.all([
+      import('vite-plugin-vue-devtools'),
+      import('@valaxyjs/devtools'),
+    ])
     vitePlugins.push(
-      (await import('vite-plugin-vue-devtools')).default(),
-      (await import('@valaxyjs/devtools')).default({
+      vueDevtools.default(),
+      valaxyDevtools.default({
         userRoot: options.userRoot,
       }),
     )
