@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useHead } from '@unhead/vue'
+import { TooltipProvider } from 'reka-ui'
 import { useAppStore } from 'valaxy'
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -55,24 +56,23 @@ const isDev = import.meta.env.DEV
 </script>
 
 <template>
-  <YunStratoApp v-if="yun.isStrato" />
-  <YunDebug v-if="isDev" />
+  <TooltipProvider>
+    <YunStratoApp v-if="yun.isStrato" />
+    <YunDebug v-if="isDev" />
 
-  <YunPageHeaderGradient />
-  <YunNavMenu />
+    <YunPageHeaderGradient />
+    <YunNavMenu />
 
-  <YunFullscreenMenu v-if="yun.isNimbo && !yun.size.isLg" />
-  <YunStratoSidebar v-if="yun.isStrato" />
+    <YunFullscreenMenu v-if="yun.isNimbo && !yun.size.isLg" />
+    <YunStratoSidebar v-if="yun.isStrato" />
 
-  <YunFireworks v-if="themeConfig.fireworks.enable" />
-  <slot name="bg">
-    <YunBg v-if="themeConfig.bg_image.enable" />
-  </slot>
-  <Transition name="fade">
-    <YunLoading v-if="app.showLoading" />
-  </Transition>
-  <YunBackToTop />
-
-  <!-- TODO -->
-  <!-- <YunDock /> -->
+    <YunFireworks v-if="themeConfig.fireworks.enable" />
+    <slot name="bg">
+      <YunBg v-if="themeConfig.bg_image.enable" />
+    </slot>
+    <Transition name="fade">
+      <YunLoading v-if="app.showLoading" />
+    </Transition>
+    <YunBackToTop />
+  </TooltipProvider>
 </template>

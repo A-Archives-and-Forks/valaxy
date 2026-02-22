@@ -40,22 +40,21 @@ const socialName = computed(() => $t(props.social.name))
 </script>
 
 <template>
-  <div
-    v-tooltip="socialName"
-    class="size-10 inline-flex-center"
-  >
-    <a
-      ref="iconRef"
-      class="prologue-social-icon inline-flex-center w-full h-full text-white bg-$c-brand hover:bg-white hover:text-$c-brand"
-      rel="noopener"
-      :href="social.link" :title="socialName"
-      target="_blank"
-      :style="`--c-brand:${social.color}`"
-    >
-      <div
-        class="size-6"
-        :class="social.icon"
-      />
-    </a>
-  </div>
+  <YunTooltip :content="socialName">
+    <div class="size-10 inline-flex-center">
+      <a
+        ref="iconRef"
+        class="prologue-social-icon inline-flex-center w-full h-full text-white bg-$c-brand hover:bg-white hover:text-$c-brand"
+        rel="noopener"
+        :href="social.link" :title="socialName"
+        target="_blank"
+        :style="`--c-brand:${social.color}`"
+      >
+        <div
+          class="size-6"
+          :class="social.icon"
+        />
+      </a>
+    </div>
+  </YunTooltip>
 </template>
