@@ -16,6 +16,16 @@ const safelist = [
   'i-ri-home-line',
 
   'i-ri-github-line',
+
+  'i-ri-sparkle-line',
+  'i-ri-file-copy-line',
+  'i-ri-file-text-line',
+  'i-ri-check-line',
+  'i-ri-arrow-down-s-line',
+  'i-ri-link',
+  'i-ri-external-link-line',
+  'i-simple-icons-openai',
+  'i-simple-icons-claude',
 ]
 
 export default defineValaxyConfig<PressTheme.Config>({
@@ -26,7 +36,7 @@ export default defineValaxyConfig<PressTheme.Config>({
 
     search: {
       enable: true,
-      type: 'algolia',
+      provider: 'algolia',
     },
     encrypt: {
       enable: true,
@@ -37,6 +47,10 @@ export default defineValaxyConfig<PressTheme.Config>({
     },
 
     lastUpdated: true,
+
+    llms: {
+      enable: true,
+    },
   },
 
   addons: [
