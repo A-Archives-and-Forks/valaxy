@@ -35,6 +35,10 @@ export const customElements = new Set([
   'munder',
   'munderover',
   'semantics',
+
+  // mathjax
+  'mjx-container',
+  'mjx-assistive-mml',
 ])
 
 /**

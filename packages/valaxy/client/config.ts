@@ -6,7 +6,7 @@ import type { ComputedRef, InjectionKey } from 'vue'
 // https://github.com/microsoft/TypeScript/issues/42873
 import type { DefaultTheme, ValaxyConfig } from '../types'
 import type { ValaxyData } from './app/data'
-import { computed, inject, readonly, shallowRef } from 'vue'
+import { computed, hasInjectionContext, inject, readonly, shallowRef } from 'vue'
 
 // @ts-expect-error virtual module @valaxyjs/config
 import valaxyConfig from '/@valaxyjs/config'
@@ -62,10 +62,12 @@ export function initContext() {
  * @public
  */
 export function useValaxyConfig<ThemeConfig = DefaultTheme.Config>() {
+  if (!hasInjectionContext())
+    throw new Error('[Valaxy] useValaxyConfig() must be called inside setup() or a component lifecycle')
   const config = inject<ComputedRef<ValaxyConfig<ThemeConfig>>>(valaxyConfigSymbol)
   if (!config)
     throw new Error('[Valaxy] site config not properly injected in app')
-  return config!
+  return config
 }
 
 /**

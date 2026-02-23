@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { compile, defineAsyncComponent, shallowRef, watch } from 'vue'
+import { compile, computed, defineComponent } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -12,22 +12,28 @@ const props = withDefaults(
   },
 )
 
-const dynamicComponent = shallowRef<Component | null>(null)
+// Separate compile from component creation — compile() is expensive and
+// should only re-run when the template string itself changes.
+const compiledRender = computed(() => {
+  if (!props.templateStr)
+    return null
+  return compile(props.templateStr)
+})
 
-async function createComponent() {
-  const render = compile(props.templateStr)
-  const componentDefinition = {
+// defineComponent creates a proper component instance so that compile()'s
+// render function can access data properties through the instance context.
+// Avoids defineAsyncComponent which causes "missing template" warnings in SSG.
+const dynamicComponent = computed<Component | null>(() => {
+  const render = compiledRender.value
+  if (!render)
+    return null
+  return defineComponent({
+    data: () => ({ ...props.data }),
     render,
-    data: () => props.data,
-  }
-  dynamicComponent.value = defineAsyncComponent(() => Promise.resolve(componentDefinition))
-}
-
-watch(() => [props.templateStr, props.data], () => {
-  createComponent()
-}, { immediate: true })
+  })
+})
 </script>
 
 <template>
-  <component :is="dynamicComponent" />
+  <component :is="dynamicComponent" v-if="dynamicComponent" />
 </template>

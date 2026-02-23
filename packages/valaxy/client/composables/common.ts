@@ -2,7 +2,7 @@ import type { PostFrontMatter } from '../../types'
 import type { ValaxyData } from '../app/data'
 
 import { isClient } from '@vueuse/core'
-import { computed, inject } from 'vue'
+import { computed, hasInjectionContext, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { dataSymbol, useSiteConfig } from '../config'
 
@@ -73,10 +73,11 @@ export function useEncryptedPhotos() {
  * inject pageData
  */
 export function useData<FM = Record<string, any>>(): ValaxyData<FM> {
-  const data = inject(dataSymbol, {} as any)
-  if (!data) {
-    throw new Error('Valaxy data not properly injected in app')
-  }
+  if (!hasInjectionContext())
+    throw new Error('[Valaxy] useData() must be called inside setup() or a component lifecycle')
+  const data = inject<ValaxyData<FM>>(dataSymbol)
+  if (!data)
+    throw new Error('[Valaxy] data not properly injected in app')
   return data
 }
 
