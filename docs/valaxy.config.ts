@@ -106,6 +106,10 @@ export default defineValaxyConfig<PressTheme.Config>({
       'theme',
       'addon',
       'dev',
+      {
+        text: 'nav.dev-notes',
+        link: '/posts/',
+      },
     ],
     socialLinks: [
       { icon: 'i-ri-github-line', link: 'https://github.com/YunYouJun/valaxy' },
@@ -194,6 +198,10 @@ export default defineValaxyConfig<PressTheme.Config>({
             link: '/dev',
           },
           {
+            text: 'nav.dev-notes',
+            link: '/posts/',
+          },
+          {
             text: 'nav.examples.site',
             link: '/examples/site',
           },
@@ -223,6 +231,9 @@ export default defineValaxyConfig<PressTheme.Config>({
   unocss: {
     safelist,
   },
+
+  // use MathJax (SVG output, no external CSS/fonts)
+  math: true,
 
   markdown: {
     blocks: {

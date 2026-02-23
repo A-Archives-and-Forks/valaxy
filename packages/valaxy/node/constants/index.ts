@@ -7,7 +7,7 @@ export const PATHNAME_PROTOCOL_RE = /^pathname:\/\//
 export const ALL_ROUTE = '/:all(.*)*'
 
 export const customElements = new Set([
-  // katex
+  // katex (MathML elements)
   'annotation',
   'math',
   'menclose',
@@ -36,7 +36,7 @@ export const customElements = new Set([
   'munderover',
   'semantics',
 
-  // mathjax
+  // mathjax (SVG container element)
   'mjx-container',
   'mjx-assistive-mml',
 ])

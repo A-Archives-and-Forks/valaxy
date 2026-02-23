@@ -4,6 +4,10 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { EXTERNAL_URL_RE } from '../../shared'
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 const props = defineProps<{
   showExternalIcon?: boolean
   to?: string

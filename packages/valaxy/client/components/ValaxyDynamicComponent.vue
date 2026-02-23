@@ -35,5 +35,7 @@ const dynamicComponent = computed<Component | null>(() => {
 </script>
 
 <template>
-  <component :is="dynamicComponent" v-if="dynamicComponent" />
+  <div v-if="dynamicComponent">
+    <component :is="dynamicComponent" />
+  </div>
 </template>

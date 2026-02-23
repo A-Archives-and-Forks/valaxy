@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path'
 import { uniq } from '@antfu/utils'
 import { mergeConfig, searchForWorkspaceRoot } from 'vite'
 import { getIndexHtml } from '../common'
+import { isKatexPluginNeeded } from '../config/valaxy'
 import { isInstalledGlobally, resolveImportPath, toAtFS } from '../utils'
 
 /**
@@ -85,8 +86,18 @@ export function createConfigPlugin(options: ResolvedValaxyOptions): Plugin {
   const cdnModuleNames = options.mode === 'build'
     ? (options.config.cdn?.modules || []).map(m => m.name)
     : []
+
+  const katexEnabled = isKatexPluginNeeded(options.config)
+
+  const depsToInclude = [...clientDeps]
+  if (!katexEnabled) {
+    const katexIdx = depsToInclude.indexOf('katex')
+    if (katexIdx !== -1)
+      depsToInclude.splice(katexIdx, 1)
+  }
+
   const includedDeps = uniq([
-    ...clientDeps,
+    ...depsToInclude,
     // remove theme deps, for primevue parse entry
     // ...themeDeps,
     // addon deps
@@ -98,6 +109,16 @@ export function createConfigPlugin(options: ResolvedValaxyOptions): Plugin {
     // before devtools
     enforce: 'pre',
     async config(config) {
+      const fsAllow = [
+        searchForWorkspaceRoot(options.clientRoot),
+        searchForWorkspaceRoot(options.themeRoot),
+        searchForWorkspaceRoot(options.userRoot),
+      ]
+
+      if (katexEnabled) {
+        fsAllow.push(dirname(await resolveImportPath('katex/package.json', true)))
+      }
+
       const injection: InlineConfig = {
         // root: options.userRoot,
         // can not transform valaxy/client/*.ts when use userRoot
@@ -123,12 +144,7 @@ export function createConfigPlugin(options: ResolvedValaxyOptions): Plugin {
 
         server: {
           fs: {
-            allow: uniq([
-              searchForWorkspaceRoot(options.clientRoot),
-              searchForWorkspaceRoot(options.themeRoot),
-              searchForWorkspaceRoot(options.userRoot),
-              dirname(await resolveImportPath('katex/package.json', true)),
-            ]),
+            allow: uniq(fsAllow),
           },
         },
       }

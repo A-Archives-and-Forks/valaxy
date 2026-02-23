@@ -45,10 +45,3 @@ Commit message 请以 `docs:` 开头。
 
 修改了 `xxx.md` 中的错别字：
 即：`docs: fix xxx.md typo`。
-
-## 奖励
-
-我们将会给为 Valaxy 贡献文档翻译及其他工作的用户发放一些奖励。
-
-- 超过 10 commits：赠送 Valaxy Logo 亚克力板挂件
-- 超过 20 commits：赠送 Valaxy Logo 与小云亚克力板挂件

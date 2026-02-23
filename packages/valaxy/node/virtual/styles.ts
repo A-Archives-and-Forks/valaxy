@@ -2,6 +2,7 @@ import type { VirtualModuleTemplate } from './types'
 import { existsSync } from 'node:fs'
 
 import { join } from 'node:path'
+import { isKatexPluginNeeded } from '../config/valaxy'
 import { resolveImportUrl, toAtFS } from '../utils'
 
 export const templateStyles: VirtualModuleTemplate = {
@@ -13,7 +14,9 @@ export const templateStyles: VirtualModuleTemplate = {
 
     const imports: string[] = []
 
-    if (config.features?.katex) {
+    // KaTeX CSS: needed when KaTeX plugin is registered (not MathJax)
+    // Always load when plugin is registered so that per-page frontmatter.katex works
+    if (isKatexPluginNeeded(config)) {
       imports.push(`import "${await resolveImportUrl('katex/dist/katex.min.css')}"`)
       imports.push(`import "${resolveUrlOfClient('styles/third/katex.scss')}"`)
     }

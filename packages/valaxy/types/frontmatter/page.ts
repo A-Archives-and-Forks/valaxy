@@ -159,7 +159,12 @@ export interface PageFrontMatter extends BaseFrontMatter {
   end: boolean
 
   /**
-   * use katex
+   * Enable/disable KaTeX math rendering for this page.
+   * Overrides the global `features.katex` setting.
+   *
+   * - When `features.katex: true` (default), set `katex: false` to disable KaTeX for this page.
+   * - When `features.katex: false`, set `katex: true` to enable KaTeX for this page.
+   *
    * @url https://katex.org/
    */
   katex: boolean

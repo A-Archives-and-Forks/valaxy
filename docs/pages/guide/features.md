@@ -315,37 +315,40 @@ npm run rss
 For more info, see [i18n](/posts/i18n).
 :::
 
-## KaTeX
+## Math | 数学公式
 
 ::: zh-CN
-KaTeX 已被默认支持并启用。
+Valaxy 支持两种数学渲染引擎：KaTeX（默认，渲染快）和 MathJax（SVG 输出，无需外部 CSS/字体）。
 :::
 
 ::: en
-Katex is enabled by default.
+Valaxy supports two math rendering engines: KaTeX (default, fast rendering) and MathJax (SVG output, no external CSS/fonts needed).
 :::
 
 ```ts [valaxy.config.ts]
 import { defineValaxyConfig } from 'valaxy'
 
 export default defineValaxyConfig({
+  // KaTeX (enabled by default)
   features: {
-    // disable katex
-    katex: false
-  }
+    katex: true
+  },
+
+  // Or switch to MathJax (install first: pnpm add markdown-it-mathjax3)
+  // math: true,
 })
 ```
 
 ::: zh-CN
 
-- [KaTeX | 示例](/examples/katex)
+- [数学公式 | 示例](/examples/math)
 - [通过 CDN 加载 KaTeX](/guide/config/extend#cdn-externals) (实验性)
 
 :::
 
 ::: en
 
-- [KaTeX | Examples](/examples/katex)
+- [Math Formulas | Examples](/examples/math)
 - [Load KaTeX from CDN](/guide/config/extend#cdn-externals) (Experimental)
 
 :::

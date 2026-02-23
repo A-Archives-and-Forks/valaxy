@@ -250,6 +250,23 @@ function getSearchableText(content: string) {
   return clearHtmlTags(content)
 }
 
+/**
+ * Extract LaTeX source from KaTeX annotation element.
+ * KaTeX renders `<annotation encoding="application/x-tex">...</annotation>` inside
+ * a `<semantics>` block. We pull out that plain-text LaTeX so that math formulas
+ * remain searchable (e.g. "E = mc^2") instead of becoming garbled span fragments.
+ */
+function replaceKatexWithSource(html: string): string {
+  // Replace each KaTeX wrapper with the original LaTeX from <annotation>
+  return html.replace(
+    /<span class="katex(?:-display)?">[\s\S]*?<annotation encoding="application\/x-tex">([\s\S]*?)<\/annotation>[\s\S]*?<\/span>(?:<\/span>)?/g,
+    (_, tex) => ` ${tex} `,
+  )
+}
+
 function clearHtmlTags(str: string) {
-  return str.replace(/<[^>]*>/g, '')
+  // First, replace KaTeX-rendered blocks with their LaTeX source
+  str = replaceKatexWithSource(str)
+  // Then strip remaining HTML tags
+  return str.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ')
 }

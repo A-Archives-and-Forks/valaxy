@@ -24,6 +24,7 @@
   "devDependencies": {
     "@iconify-json/carbon": "catalog:build",
     "@iconify-json/simple-icons": "catalog:build",
+    "markdown-it-mathjax3": "^5.2.0",
     "nodemon": "catalog:",
     "vite": "catalog:build",
     "vitepress": "catalog:frontend"

@@ -145,6 +145,12 @@ export interface MarkdownOptions extends Options {
    */
   katex?: KatexOptions
 
+  /**
+   * Options for `markdown-it-mathjax3`
+   * @see https://github.com/tani/markdown-it-mathjax3
+   */
+  mathjax?: any
+
   externalLinks?: Record<string, string>
   /* lazyload?: {
     enabled?: boolean

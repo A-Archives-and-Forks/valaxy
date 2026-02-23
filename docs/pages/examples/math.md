@@ -1,5 +1,7 @@
 ---
-title: KaTeX
+title:
+  zh-CN: 数学公式
+  en: Math Formulas
 date: 2020-03-23 02:02:15
 updated: 2020-03-23 02:02:15
 toc: true
@@ -7,13 +9,13 @@ categories:
   - examples
 ---
 
-## [$\KaTeX$](https://katex.org/)
+::: tip
+Valaxy 支持两种数学渲染引擎：[KaTeX](https://katex.org/)（默认，渲染快）和 [MathJax](https://www.mathjax.org/)（SVG 输出，无需外部 CSS/字体）。
 
-- <https://katex.org/docs/autorender.html>
-- [KaTeX Supported Functions](https://katex.org/docs/supported.html)
-- [KaTeX Support Table](https://katex.org/docs/support_table.html)
+当前文档站使用 MathJax 渲染。
+:::
 
-### 行内公式
+## 行内公式
 
 $\{x | Ax = b\}$
 
@@ -32,7 +34,7 @@ $E = mc^2$
 $\frac{\partial}{\partial t}$
 ```
 
-### 行间公式
+## 行间公式
 
 $$ E = mc^2 $$
 
@@ -119,5 +121,41 @@ $$
     end{aligned}
   \right.
 \end{equation}
+$$
+```
+
+## MathJax 特有功能
+
+MathJax 相比 KaTeX 支持更多 LaTeX 扩展。以下是一些 MathJax 的额外功能示例：
+
+### 化学方程式
+
+$$
+\ce{CO2 + C -> 2 CO}
+$$
+
+```latex
+$$
+\ce{CO2 + C -> 2 CO}
+$$
+```
+
+### 复杂环境
+
+$$
+\begin{pmatrix}
+  1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & 1
+\end{pmatrix}
+$$
+
+```latex
+$$
+\begin{pmatrix}
+  1 & 0 & 0 \\
+  0 & 1 & 0 \\
+  0 & 0 & 1
+\end{pmatrix}
 $$
 ```

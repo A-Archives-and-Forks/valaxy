@@ -11,9 +11,19 @@ end: false
 与 `Hexo` 不同，`Valaxy` 在框架层面实现了一些 Markdown 扩展（如 Container、数学公式）等，而无需主题开发者再次实现。
 
 这与 `VitePress` 许多功能类似，`Valaxy` 从 `VitePress` 中借鉴了许多，并复用了 [mdit-vue](https://github.com/mdit-vue/mdit-vue) 的插件。
-但也存在一些不同之处，此前当 `Valaxy` 实现数学公式时 `VitePress` 尚未支持，目前 `Valaxy` 默认的数学公式基于 KaTeX，而 `VitePress` 基于 MathJax。
+但也存在一些不同之处，Valaxy 默认使用 [KaTeX](https://katex.org/)（渲染速度快），同时也支持 [MathJax](https://www.mathjax.org/)（对齐 VitePress，SVG 输出无需外部 CSS/字体）。
 
-> KaTeX 相对于 MathJax 有更快的渲染速度，MathJax 则拥有更多的功能。
+> **注意**：`features.katex` 与 `math` 请勿同时开启，两者使用不同的渲染引擎，同时启用可能导致公式重复渲染或样式冲突。启用 `math`（MathJax）时，`features.katex` 会被自动忽略。
+
+```ts [valaxy.config.ts]
+export default defineValaxyConfig({
+  // KaTeX（默认开启）
+  features: { katex: true },
+
+  // 或切换到 MathJax（需先安装：pnpm add markdown-it-mathjax3）
+  // math: true,
+})
+```
 
 当然，你仍然可以在 Valaxy 中通过添加 MarkdownIt 插件来实现更多功能。
 :::
@@ -757,20 +767,20 @@ FROM ubuntu
 ENV PATH /opt/conda/bin:$PATH
 ```
 
-## KaTeX {lang="en"}
+## Math Formulas {lang="en"}
 
-## KaTeX 语法支持 {lang="zh-CN"}
+## 数学公式 {lang="zh-CN"}
 
 ::: tip
 
 <div lang="en">
 
-More information about $\KaTeX$ examples can be found [here](/examples/katex).
+More information about math formula examples can be found [here](/examples/math).
 </div>
 
 <div lang="zh-CN">
 
-有关更多KaTeX语法的信息可以在 [此处](/examples/katex) 找到。
+有关更多数学公式的信息可以在 [此处](/examples/math) 找到。
 </div>
 
 :::

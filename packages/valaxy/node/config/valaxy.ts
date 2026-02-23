@@ -54,6 +54,8 @@ export const defaultValaxyConfig: ValaxyNodeConfig = {
     katex: true,
   },
 
+  math: false,
+
   cdn: {
     modules: [],
   },
@@ -61,7 +63,19 @@ export const defaultValaxyConfig: ValaxyNodeConfig = {
   vite: {
     build: {
       emptyOutDir: true,
-      // cssCodeSplit: false,
+      /**
+       * Disable CSS code splitting to prevent layout shift (CLS) on first load.
+       *
+       * When enabled (default), Vite splits CSS into per-chunk files (e.g. `app.xxx.css`)
+       * that are loaded asynchronously. During SSG, beasties inlines only critical CSS and
+       * defers the rest via `media="print"`, causing the full layout CSS to arrive late
+       * and trigger a visible reflow/repaint.
+       *
+       * With `cssCodeSplit: false`, all CSS is bundled into a single file, allowing
+       * beasties to extract critical styles more effectively and the FOUC guard
+       * (`build.foucGuard`) to reliably detect when all styles are ready.
+       */
+      cssCodeSplit: false,
     },
   },
   vue: {
@@ -69,6 +83,31 @@ export const defaultValaxyConfig: ValaxyNodeConfig = {
   },
 
   devtools: true,
+}
+
+/**
+ * Whether MathJax is enabled (takes priority over KaTeX).
+ */
+export function isMathJaxEnabled(config?: ValaxyNodeConfig | null): boolean {
+  return !!config?.math
+}
+
+/**
+ * Whether KaTeX is enabled (disabled when MathJax is active).
+ */
+export function isKatexEnabled(config?: ValaxyNodeConfig | null): boolean {
+  if (config?.math)
+    return false
+  return config?.features?.katex !== false
+}
+
+/**
+ * Whether the KaTeX markdown-it plugin should be registered.
+ * Always true unless MathJax is active, so that per-page `frontmatter.katex: true`
+ * can work even when `features.katex` is globally `false`.
+ */
+export function isKatexPluginNeeded(config?: ValaxyNodeConfig | null): boolean {
+  return !config?.math
 }
 
 /**

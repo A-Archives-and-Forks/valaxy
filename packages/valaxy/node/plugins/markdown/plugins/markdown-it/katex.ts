@@ -13,6 +13,9 @@ for rendering output.
 import type { KatexOptions } from 'katex'
 import katex from 'katex'
 
+// Register mhchem extension for chemical equations (\ce, \pu, etc.)
+import 'katex/contrib/mhchem'
+
 // Test if potential opening or closing delimieter
 // Assumes that there is a "$" at state.src[pos]
 function isValidDelim(state: any, pos: number) {
@@ -165,19 +168,39 @@ function math_block(state: any, start: number, end: number, silent: boolean) {
   return true
 }
 
-export default function math_plugin(md: any, options: KatexOptions) {
-  // Default options
+export interface KatexPluginOptions {
+  katexOptions?: KatexOptions
+  /**
+   * Whether KaTeX is globally enabled.
+   * - `true`: all pages render KaTeX by default, unless `frontmatter.katex: false`
+   * - `false`: no pages render KaTeX by default, unless `frontmatter.katex: true`
+   * @default true
+   */
+  globalEnabled?: boolean
+}
 
-  options = options || {}
+/**
+ * Check if KaTeX should render for the current page based on global config and frontmatter.
+ */
+function shouldRenderKatex(env: any, globalEnabled: boolean): boolean {
+  const fm = env?.frontmatter
+  if (fm && typeof fm.katex === 'boolean')
+    return fm.katex
+  return globalEnabled
+}
+
+export default function math_plugin(md: any, options?: KatexPluginOptions) {
+  const katexOptions: KatexOptions = options?.katexOptions || {}
+  const globalEnabled = options?.globalEnabled !== false
 
   // set KaTeX as the renderer for markdown-it-simplemath
   const katexInline = function (latex: string) {
-    options.displayMode = false
+    katexOptions.displayMode = false
     try {
-      return katex.renderToString(latex, options)
+      return katex.renderToString(latex, katexOptions)
     }
     catch (error) {
-      if (options.throwOnError) {
+      if (katexOptions.throwOnError) {
         throw error
       }
       console.warn(error)
@@ -185,17 +208,19 @@ export default function math_plugin(md: any, options: KatexOptions) {
     }
   }
 
-  const inlineRenderer = function (tokens: any, idx: number) {
+  const inlineRenderer = function (tokens: any, idx: number, _options: any, env: any) {
+    if (!shouldRenderKatex(env, globalEnabled))
+      return `$${tokens[idx].content}$`
     return katexInline(tokens[idx].content)
   }
 
   const katexBlock = function (latex: string) {
-    options.displayMode = true
+    katexOptions.displayMode = true
     try {
-      return `<p>${katex.renderToString(latex, options)}</p>`
+      return `<p>${katex.renderToString(latex, katexOptions)}</p>`
     }
     catch (error) {
-      if (options.throwOnError) {
+      if (katexOptions.throwOnError) {
         throw error
       }
       console.warn(error)
@@ -203,10 +228,14 @@ export default function math_plugin(md: any, options: KatexOptions) {
     }
   }
 
-  const blockRenderer = function (tokens: any, idx: number) {
+  const blockRenderer = function (tokens: any, idx: number, _options: any, env: any) {
+    if (!shouldRenderKatex(env, globalEnabled))
+      return `$$${tokens[idx].content}$$\n`
     return `${katexBlock(tokens[idx].content)}\n`
   }
 
+  // Always register parser rules so that $...$ / $$...$$ are parsed as tokens.
+  // The renderer decides whether to invoke KaTeX based on frontmatter.
   md.inline.ruler.after('escape', 'math_inline', math_inline)
   md.block.ruler.after('blockquote', 'math_block', math_block, {
     alt: ['paragraph', 'reference', 'blockquote', 'list'],

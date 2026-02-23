@@ -30,6 +30,8 @@ import imageFigures from 'markdown-it-image-figures'
 
 import TaskLists from 'markdown-it-task-lists'
 import { groupIconMdPlugin } from 'vitepress-plugin-group-icons'
+import { isKatexPluginNeeded, isMathJaxEnabled } from '../../config/valaxy'
+
 import { linkPlugin } from './plugins/link'
 import { containerPlugin } from './plugins/markdown-it/container'
 import { footnoteTooltipPlugin } from './plugins/markdown-it/footnoteTooltip'
@@ -136,7 +138,41 @@ export async function setupMarkdownPlugins(
       ...mdOptions.toc,
     } as TocPluginOptions)
 
-  md.use(Katex, mdOptions.katex)
+  // Math rendering: MathJax or KaTeX (mutually exclusive, MathJax takes priority)
+  if (isMathJaxEnabled(options?.config)) {
+    try {
+      const mathPlugin = await import('markdown-it-mathjax3')
+      const mathjaxPlugin = mathPlugin.default ?? mathPlugin
+      mathjaxPlugin(md, {
+        ...(mdOptions.mathjax || {}),
+      })
+      // Add v-pre to prevent Vue from processing MathJax SVG output
+      const origMathInline = md.renderer.rules.math_inline!
+      md.renderer.rules.math_inline = function (...args) {
+        return origMathInline
+          .apply(this, args)
+          .replace(/^<mjx-container /, '<mjx-container v-pre ')
+      }
+      const origMathBlock = md.renderer.rules.math_block!
+      md.renderer.rules.math_block = function (...args) {
+        return origMathBlock
+          .apply(this, args)
+          .replace(/^<mjx-container /, '<mjx-container v-pre tabindex="0" ')
+      }
+    }
+    catch {
+      throw new Error(
+        'You need to install `markdown-it-mathjax3` to use MathJax. '
+        + 'Run: pnpm add markdown-it-mathjax3',
+      )
+    }
+  }
+  else if (isKatexPluginNeeded(options?.config)) {
+    md.use(Katex, {
+      katexOptions: mdOptions.katex,
+      globalEnabled: options?.config?.features?.katex !== false,
+    })
+  }
 
   const vanillaLazyload = options?.config.siteConfig.vanillaLazyload || { enable: false }
   // markdown-it-image-figures

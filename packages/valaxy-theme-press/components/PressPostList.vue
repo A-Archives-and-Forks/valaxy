@@ -12,13 +12,16 @@ const props = withDefaults(defineProps<{
 })
 
 const site = useSiteStore()
-const posts = computed(() => props.posts || site.postList)
+const posts = computed(() => {
+  const list = props.posts || site.postList
+  return list.filter(p => p.path && !p.path.endsWith('/'))
+})
 </script>
 
 <template>
   <ul class="divide-y divide-gray-200">
     <TransitionGroup name="fade">
-      <li v-for="post, i in posts" :key="i" class="py-12">
+      <li v-for="post, i in posts" :key="i" class="py-8">
         <PressArticleCard :post="post" />
       </li>
     </TransitionGroup>

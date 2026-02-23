@@ -176,12 +176,31 @@ export interface ValaxyExtendConfig {
   features: {
     /**
      * enable katex for global
+     *
+     * - `true` (default): all pages render KaTeX, unless `frontmatter.katex: false`
+     * - `false`: no pages render KaTeX by default, but individual pages can opt-in via `frontmatter.katex: true`
+     *
      * @see [Example | Valaxy](https://valaxy.site/examples/katex)
      * @see https://katex.org/
      * @default true
      */
     katex: boolean
   }
+
+  /**
+   * Enable MathJax3 math rendering (aligned with VitePress `markdown.math`).
+   *
+   * When enabled, MathJax3 will be used via `markdown-it-mathjax3` to render
+   * math formulas as self-contained SVG — no external CSS or fonts required.
+   *
+   * - `features.katex` and `math` are **mutually exclusive**.
+   * - When `math` is enabled, `features.katex` is automatically ignored.
+   * - `math` requires installing `markdown-it-mathjax3`: `pnpm add markdown-it-mathjax3`
+   *
+   * @see https://www.mathjax.org/
+   * @default false
+   */
+  math: boolean
   /**
    * vite.config.ts options
    * @see https://vite.dev/
