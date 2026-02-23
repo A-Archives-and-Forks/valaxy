@@ -1,18 +1,32 @@
 /**
- * @TODO localSearch by minisearch
+ * Local search powered by MiniSearch
+ * @see https://github.com/vuejs/vitepress/blob/main/src/node/plugins/localSearchPlugin.ts
  */
 
-import type { Plugin } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
 import type { ResolvedValaxyOptions } from '../types'
-// import path from 'node:path'
-// import { slash } from '@antfu/utils'
-// import _debug from 'debug'
-// import pMap from 'p-map'
+import type { MarkdownEnv } from './markdown/env'
+import path from 'node:path'
+import process from 'node:process'
+import { slash } from '@antfu/utils'
+import _debug from 'debug'
+import fs from 'fs-extra'
+import MiniSearch from 'minisearch'
+import pMap from 'p-map'
+import { createMarkdownRenderer } from './markdown'
+import { processIncludes } from './markdown/utils/processInclude'
+
+const debug = _debug('valaxy:local-search')
 
 const LOCAL_SEARCH_INDEX_ID = '@localSearchIndex'
 const LOCAL_SEARCH_INDEX_REQUEST_PATH = `/${LOCAL_SEARCH_INDEX_ID}`
 
-// const debug = _debug('vitepress:local-search')
+interface IndexObject {
+  id: string
+  text: string
+  title: string
+  titles: string[]
+}
 
 export async function localSearchPlugin(
   options: ResolvedValaxyOptions,
@@ -35,100 +49,207 @@ export async function localSearchPlugin(
     }
   }
 
-  // let server: ViteDevServer | undefined
+  const srcDir = path.resolve(options.userRoot, 'pages')
+  const md = await createMarkdownRenderer(options)
 
-  // function onIndexUpdated() {
-  //   if (server) {
-  //     server.moduleGraph.onFileChange(LOCAL_SEARCH_INDEX_REQUEST_PATH)
-  //     // HMR
-  //     const mod = server.moduleGraph.getModuleById(
-  //       LOCAL_SEARCH_INDEX_REQUEST_PATH,
-  //     )
-  //     if (!mod)
-  //       return
-  //     server.ws.send({
-  //       type: 'update',
-  //       updates: [
-  //         {
-  //           acceptedPath: mod.url,
-  //           path: mod.url,
-  //           timestamp: Date.now(),
-  //           type: 'js-update',
-  //         },
-  //       ],
-  //     })
-  //   }
-  // }
+  async function render(file: string) {
+    if (!fs.existsSync(file))
+      return ''
+    const relativePath = slash(path.relative(srcDir, file))
+    const env: MarkdownEnv = { path: file, relativePath }
+    const mdRaw = await fs.promises.readFile(file, 'utf-8')
+    const mdSrc = processIncludes(srcDir, mdRaw, file)
+    const html = await md.renderAsync(mdSrc, env)
+    return env.frontmatter?.search === false ? '' : html
+  }
 
-  // function getDocId(file: string) {
-  //   let relFile = slash(path.relative(siteConfig.srcDir, file))
-  //   relFile = siteConfig.rewrites.map[relFile] || relFile
-  //   let id = slash(path.join(siteConfig.site.base, relFile))
-  //   id = id.replace(/(^|\/)index\.md$/, '$1')
-  //   id = id.replace(/\.md$/, siteConfig.cleanUrls ? '' : '.html')
-  //   return id
-  // }
+  const indexByLocales = new Map<string, MiniSearch<IndexObject>>()
 
-  // async function indexFile(page: string) {
-  //   const file = path.join(siteConfig.srcDir, page)
-  //   // get file metadata
-  //   const fileId = getDocId(file)
-  //   const locale = getLocaleForPath(siteConfig.site, page)
-  //   const index = getIndexByLocale(locale)
-  //   // retrieve file and split into "sections"
-  //   const html = await render(file)
-  //   const sections
-  //     // user provided generator
-  //     = (await options.miniSearch?._splitIntoSections?.(file, html))
-  //     // default implementation
-  //       ?? splitPageIntoSections(html)
-  //   // add sections to the locale index
-  //   for await (const section of sections) {
-  //     if (!section || !(section.text || section.titles))
-  //       break
-  //     const { anchor, text, titles } = section
-  //     const id = anchor ? [fileId, anchor].join('#') : fileId
-  //     index.add({
-  //       id,
-  //       text,
-  //       title: titles.at(-1)!,
-  //       titles: titles.slice(0, -1),
-  //     })
-  //   }
-  // }
+  function getIndexByLocale(locale: string) {
+    let index = indexByLocales.get(locale)
+    if (!index) {
+      index = new MiniSearch<IndexObject>({
+        fields: ['title', 'titles', 'text'],
+        storeFields: ['title', 'titles'],
+      })
+      indexByLocales.set(locale, index)
+    }
+    return index
+  }
 
-  // async function scanForBuild() {
-  //   debug('🔍️ Indexing files for search...')
-  //   await pMap(siteConfig.pages, indexFile, {
-  //     concurrency: siteConfig.buildConcurrency,
-  //   })
-  //   debug('✅ Indexing finished...')
-  // }
+  let server: ViteDevServer | undefined
+
+  function onIndexUpdated() {
+    if (server) {
+      server.moduleGraph.onFileChange(LOCAL_SEARCH_INDEX_REQUEST_PATH)
+      const mod = server.moduleGraph.getModuleById(
+        LOCAL_SEARCH_INDEX_REQUEST_PATH,
+      )
+      if (!mod)
+        return
+      server.ws.send({
+        type: 'update',
+        updates: [
+          {
+            acceptedPath: mod.url,
+            path: mod.url,
+            timestamp: Date.now(),
+            type: 'js-update',
+          },
+        ],
+      })
+    }
+  }
+
+  function getDocId(file: string) {
+    const relFile = slash(path.relative(srcDir, file))
+    let id = slash(path.join('/', relFile))
+    id = id.replace(/(^|\/)index\.md$/, '$1')
+    id = id.replace(/\.md$/, '.html')
+    return id
+  }
+
+  function getLocaleForPath(page: string): string {
+    const languages = siteConfig.languages || ['en']
+    const firstSegment = page.split('/')[0]
+    if (languages.includes(firstSegment)) {
+      return firstSegment
+    }
+    return 'root'
+  }
+
+  async function indexFile(page: string) {
+    const file = path.join(srcDir, page)
+    const fileId = getDocId(file)
+    const locale = getLocaleForPath(page)
+    const index = getIndexByLocale(locale)
+
+    const html = await render(file)
+    const sections = splitPageIntoSections(html)
+    for (const section of sections) {
+      if (!section || !(section.text || section.titles))
+        break
+      const { anchor, text, titles } = section
+      const id = anchor ? [fileId, anchor].join('#') : fileId
+      index.add({
+        id,
+        text,
+        title: titles.at(-1)!,
+        titles: titles.slice(0, -1),
+      })
+    }
+  }
+
+  async function scanForBuild() {
+    debug('Indexing files for search...')
+    indexByLocales.clear()
+    await pMap(options.pages, indexFile, {
+      concurrency: 10,
+    })
+    debug('Indexing finished..., %d locales', indexByLocales.size)
+  }
 
   return {
     name: 'valaxy:local-search',
-    config: () => {
-      return {
-        optimizeDeps: {
-          include: [
-            'valaxy > @vueuse/integrations/useFocusTrap',
-            'valaxy > mark.js/src/vanilla.js',
-            'valaxy > minisearch',
-          ],
-        },
 
-        // async configureServer(_server) {
-        //   server = _server
-        //   await scanForBuild()
-        //   onIndexUpdated()
-        // },
+    config: () => ({
+      optimizeDeps: {
+        include: [
+          'valaxy > @vueuse/integrations/useFocusTrap',
+          'valaxy > mark.js/src/vanilla.js',
+          'valaxy > minisearch',
+        ],
+      },
+    }),
 
-        // resolveId(id) {
-        //   if (id.startsWith(LOCAL_SEARCH_INDEX_ID)) {
-        //     return `/${id}`
-        //   }
-        // },
+    async configureServer(_server) {
+      server = _server
+      await scanForBuild()
+      onIndexUpdated()
+    },
+
+    resolveId(id) {
+      if (id.startsWith(LOCAL_SEARCH_INDEX_ID)) {
+        return `/${id}`
+      }
+    },
+
+    async load(id) {
+      if (id === LOCAL_SEARCH_INDEX_REQUEST_PATH) {
+        if (process.env.NODE_ENV === 'production') {
+          await scanForBuild()
+        }
+        const records: string[] = []
+        for (const [locale] of indexByLocales) {
+          records.push(
+            `${JSON.stringify(locale)}: () => import('${LOCAL_SEARCH_INDEX_ID}${locale}')`,
+          )
+        }
+        return `export default {${records.join(',')}}`
+      }
+      else if (id.startsWith(LOCAL_SEARCH_INDEX_REQUEST_PATH)) {
+        return `export default ${JSON.stringify(
+          JSON.stringify(
+            indexByLocales.get(
+              id.replace(LOCAL_SEARCH_INDEX_REQUEST_PATH, ''),
+            ) ?? {},
+          ),
+        )}`
+      }
+    },
+
+    async handleHotUpdate({ file }) {
+      if (file.endsWith('.md')) {
+        const relPath = slash(path.relative(srcDir, file))
+        if (!relPath.startsWith('..')) {
+          // Rebuild the entire index for simplicity
+          // (avoids accessing protected MiniSearch internals for discard)
+          await scanForBuild()
+          debug('Updated index for %s', relPath)
+          onIndexUpdated()
+        }
       }
     },
   }
+}
+
+// eslint-disable-next-line regexp/no-super-linear-backtracking
+const headingRegex = /<h(\d+)[^>]*>(.*?<a[^>]* href="#[^"]*"[^>]*>[^<]*<\/a>)<\/h\1>/gi
+const headingContentRegex = /(.*)<a[^>]* href="#([^"]*)"[^>]*>[^<]*<\/a>/i
+
+/**
+ * Splits HTML into sections based on headings
+ */
+function* splitPageIntoSections(html: string) {
+  const result = html.split(headingRegex)
+  result.shift()
+  let parentTitles: string[] = []
+  for (let i = 0; i < result.length; i += 3) {
+    const level = Number.parseInt(result[i]) - 1
+    const heading = result[i + 1]
+    const headingResult = headingContentRegex.exec(heading)
+    const title = clearHtmlTags(headingResult?.[1] ?? '').trim()
+    const anchor = headingResult?.[2] ?? ''
+    const content = result[i + 2]
+    if (!title || !content)
+      continue
+    let titles = parentTitles.slice(0, level)
+    titles[level] = title
+    titles = titles.filter(Boolean)
+    yield { anchor, titles, text: getSearchableText(content) }
+    if (level === 0) {
+      parentTitles = [title]
+    }
+    else {
+      parentTitles[level] = title
+    }
+  }
+}
+
+function getSearchableText(content: string) {
+  return clearHtmlTags(content)
+}
+
+function clearHtmlTags(str: string) {
+  return str.replace(/<[^>]*>/g, '')
 }

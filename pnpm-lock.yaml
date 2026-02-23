@@ -367,6 +367,9 @@ catalogs:
     minimist:
       specifier: ^1.2.8
       version: 1.2.8
+    minisearch:
+      specifier: ^7.2.0
+      version: 7.2.0
     mlly:
       specifier: ^1.8.0
       version: 1.8.0
@@ -1024,6 +1027,9 @@ importers:
       mermaid:
         specifier: 'catalog:'
         version: 11.12.3
+      minisearch:
+        specifier: 'catalog:'
+        version: 7.2.0
       mlly:
         specifier: 'catalog:'
         version: 1.8.0
