@@ -21,7 +21,7 @@ const { $tO } = useValaxyI18n()
         </h2>
         <div
           v-if="post.excerpt"
-          class="press-article-card-excerpt prose dark:prose-invert max-w-none text-gray-500"
+          class="press-article-card-excerpt prose dark:prose-invert max-w-none"
         >
           <ValaxyDynamicComponent :template-str="post.excerpt" />
         </div>

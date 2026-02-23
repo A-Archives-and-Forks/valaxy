@@ -51,12 +51,13 @@ const updatedDate = computed(() => frontmatter.value.updated ? formatDate(frontm
         </span>
       </div>
       <div v-if="frontmatter.tags?.length || frontmatter.categories" class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs">
-        <span
+        <RouterLink
           v-for="tag in (Array.isArray(frontmatter.tags) ? frontmatter.tags : [])" :key="tag"
-          class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+          class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 no-underline hover:bg-primary/10 hover:text-primary transition-colors"
+          :to="{ path: '/tags/', query: { tag } }"
         >
           #{{ tag }}
-        </span>
+        </RouterLink>
       </div>
     </header>
 
