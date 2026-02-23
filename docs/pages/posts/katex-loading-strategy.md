@@ -126,7 +126,7 @@ export default defineValaxyConfig({
 #### 1. 正则检测误判与遗漏（严重）
 
 ```ts
-const hasInlineMath = /(?<![\\$])\$(?!\$)(?!\s)(.+?)(?<!\s)\$(?!\$)/s.test(content)
+const hasInlineMath = /(?<![\\$])\$(?!\$)(?!\s).+?(?<!\s)\$(?!\$)/s.test(content)
 const hasBlockMath = /\$\$[\s\S]+?\$\$/.test(content)
 ```
 

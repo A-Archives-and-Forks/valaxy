@@ -104,8 +104,8 @@ catalogs:
       specifier: ^3.0.2
       version: 3.0.2
     '@microsoft/api-extractor':
-      specifier: ^7.57.2
-      version: 7.57.2
+      specifier: ^7.57.3
+      version: 7.57.3
     '@playwright/test':
       specifier: ^1.58.2
       version: 1.58.2
@@ -317,8 +317,8 @@ catalogs:
       specifier: ^4.1.1
       version: 4.1.1
     katex:
-      specifier: ^0.16.29
-      version: 0.16.29
+      specifier: ^0.16.32
+      version: 0.16.32
     lightgallery:
       specifier: 2.7.2
       version: 2.7.2
@@ -352,6 +352,9 @@ catalogs:
     markdown-it-image-figures:
       specifier: ^2.1.1
       version: 2.1.1
+    markdown-it-mathjax3:
+      specifier: ^5.2.0
+      version: 5.2.0
     markdown-it-table-of-contents:
       specifier: ^1.1.0
       version: 1.1.0
@@ -574,7 +577,7 @@ importers:
         version: 1.2.43
       '@microsoft/api-extractor':
         specifier: 'catalog:'
-        version: 7.57.2(@types/node@24.10.13)
+        version: 7.57.3(@types/node@24.10.13)
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.58.2
@@ -637,7 +640,7 @@ importers:
         version: 17.0.0(postcss@8.5.6)(stylelint@17.3.0(typescript@5.9.3))
       tsup:
         specifier: 'catalog:'
-        version: 8.5.1(@microsoft/api-extractor@7.57.2(@types/node@24.10.13))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+        version: 8.5.1(@microsoft/api-extractor@7.57.3(@types/node@24.10.13))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -673,7 +676,7 @@ importers:
         version: 1.1.2(typedoc-plugin-markdown@4.10.0(typedoc@0.28.17(typescript@5.9.3)))
       vitepress:
         specifier: catalog:frontend
-        version: 2.0.0-alpha.16(@types/node@25.2.0)(axios@1.13.5)(change-case@5.4.4)(fuse.js@7.1.0)(jiti@2.6.1)(nprogress@0.2.0)(postcss@8.5.6)(qrcode@1.5.4)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+        version: 2.0.0-alpha.16(@types/node@25.2.0)(axios@1.13.5)(change-case@5.4.4)(fuse.js@7.1.0)(jiti@2.6.1)(markdown-it-mathjax3@5.2.0)(nprogress@0.2.0)(postcss@8.5.6)(qrcode@1.5.4)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
 
   demo/custom:
     dependencies:
@@ -768,7 +771,7 @@ importers:
         specifier: catalog:build
         version: 1.2.71
       markdown-it-mathjax3:
-        specifier: ^5.2.0
+        specifier: 'catalog:'
         version: 5.2.0
       nodemon:
         specifier: 'catalog:'
@@ -990,7 +993,7 @@ importers:
         version: 4.1.1
       katex:
         specifier: 'catalog:'
-        version: 0.16.29
+        version: 0.16.32
       lru-cache:
         specifier: 'catalog:'
         version: 11.2.6
@@ -2264,8 +2267,8 @@ packages:
   '@microsoft/api-extractor-model@7.33.1':
     resolution: {integrity: sha512-KX0LI6xzI0gcBOXXmr5mnnbdhsK2W93pqvJo8OgJgWvRRh+wMEp0Ccj38h1XKeJ29E1tuAZKSUOfHUQ1WA8fZg==}
 
-  '@microsoft/api-extractor@7.57.2':
-    resolution: {integrity: sha512-Dih58xLlG+M6k2qVSksk9xJx8HvmJEyK3LcHrcqXE7eK/U7pg/8cTT8j1TKijU4P4639wvCy1zhDuvtjRy+02Q==}
+  '@microsoft/api-extractor@7.57.3':
+    resolution: {integrity: sha512-2+k2FNp+6zug/VmpK0wZFPQu7cKMihjHBP1iUuZs6Ep5P9uR1hD4dR5Ss7z/MiBkwVmKnUm6Pojhkz/c431SMw==}
     hasBin: true
 
   '@microsoft/tsdoc-config@0.18.0':
@@ -5710,8 +5713,8 @@ packages:
   jsonfile@6.2.0:
     resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
 
-  katex@0.16.29:
-    resolution: {integrity: sha512-ef+wYUDehNgScWoA0ZhEngsNqUv9uIj4ftd/PapQmT+E85lXI6Wx6BvJO48v80Vhj3t/IjEoZWw9/ZPe8kHwHg==}
+  katex@0.16.32:
+    resolution: {integrity: sha512-ac0FzkRJlpw4WyH3Zu/OgU9LmPKqjHr6O2BxfSrBt8uJ1BhvH2YK3oJ4ut/K+O+6qQt2MGpdbn0MrffVEnnUDQ==}
     hasBin: true
 
   keyv@4.5.4:
@@ -9113,7 +9116,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@microsoft/api-extractor@7.57.2(@types/node@24.10.13)':
+  '@microsoft/api-extractor@7.57.3(@types/node@24.10.13)':
     dependencies:
       '@microsoft/api-extractor-model': 7.33.1(@types/node@24.10.13)
       '@microsoft/tsdoc': 0.16.0
@@ -10199,12 +10202,6 @@ snapshots:
       unplugin-utils: 0.3.1
       vite: 7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  '@vitejs/plugin-vue@6.0.4(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.22(typescript@5.9.3))':
-    dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.2
-      vite: 7.3.1(@types/node@24.10.13)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      vue: 3.5.22(typescript@5.9.3)
-
   '@vitejs/plugin-vue@6.0.4(vite@7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.22(typescript@5.9.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.2
@@ -10238,6 +10235,14 @@ snapshots:
       magic-string: 0.30.21
     optionalDependencies:
       vite: 7.3.1(@types/node@24.10.13)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  '@vitest/mocker@4.0.18(vite@7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
+    dependencies:
+      '@vitest/spy': 4.0.18
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/pretty-format@4.0.18':
     dependencies:
@@ -12984,7 +12989,7 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  katex@0.16.29:
+  katex@0.16.32:
     dependencies:
       commander: 8.3.0
 
@@ -13374,7 +13379,7 @@ snapshots:
       dagre-d3-es: 7.0.13
       dayjs: 1.11.19
       dompurify: 3.3.1
-      katex: 0.16.29
+      katex: 0.16.32
       khroma: 2.1.0
       lodash-es: 4.17.23
       marked: 16.4.2
@@ -15128,7 +15133,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(@microsoft/api-extractor@7.57.2(@types/node@24.10.13))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2):
+  tsup@8.5.1(@microsoft/api-extractor@7.57.3(@types/node@24.10.13))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.2)
       cac: 6.7.14
@@ -15148,7 +15153,7 @@ snapshots:
       tinyglobby: 0.2.15
       tree-kill: 1.2.2
     optionalDependencies:
-      '@microsoft/api-extractor': 7.57.2(@types/node@24.10.13)
+      '@microsoft/api-extractor': 7.57.3(@types/node@24.10.13)
       postcss: 8.5.6
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -15691,54 +15696,6 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitepress@2.0.0-alpha.16(@types/node@25.2.0)(axios@1.13.5)(change-case@5.4.4)(fuse.js@7.1.0)(jiti@2.6.1)(nprogress@0.2.0)(postcss@8.5.6)(qrcode@1.5.4)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2):
-    dependencies:
-      '@docsearch/css': 4.5.3
-      '@docsearch/js': 4.5.3
-      '@docsearch/sidepanel-js': 4.5.3
-      '@iconify-json/simple-icons': 1.2.69
-      '@shikijs/core': 3.22.0
-      '@shikijs/transformers': 3.22.0
-      '@shikijs/types': 3.22.0
-      '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 6.0.4(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.22(typescript@5.9.3))
-      '@vue/devtools-api': 8.0.5
-      '@vue/shared': 3.5.27
-      '@vueuse/core': 14.2.0(vue@3.5.22(typescript@5.9.3))
-      '@vueuse/integrations': 14.2.0(axios@1.13.5)(change-case@5.4.4)(focus-trap@7.8.0)(fuse.js@7.1.0)(nprogress@0.2.0)(qrcode@1.5.4)(vue@3.5.22(typescript@5.9.3))
-      focus-trap: 7.8.0
-      mark.js: 8.11.1
-      minisearch: 7.2.0
-      shiki: 3.22.0
-      vite: 7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      vue: 3.5.22(typescript@5.9.3)
-    optionalDependencies:
-      postcss: 8.5.6
-    transitivePeerDependencies:
-      - '@types/node'
-      - async-validator
-      - axios
-      - change-case
-      - drauu
-      - fuse.js
-      - idb-keyval
-      - jiti
-      - jwt-decode
-      - less
-      - lightningcss
-      - nprogress
-      - qrcode
-      - sass
-      - sass-embedded
-      - sortablejs
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - typescript
-      - universal-cookie
-      - yaml
-
   vitest@4.0.18(@types/node@24.10.13)(jiti@2.6.1)(jsdom@28.1.0)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.18
@@ -15780,7 +15737,7 @@ snapshots:
   vitest@4.0.18(@types/node@25.2.0)(jiti@2.6.1)(jsdom@28.1.0)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@25.2.0)(jiti@2.6.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18

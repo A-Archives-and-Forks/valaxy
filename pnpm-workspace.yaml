@@ -4,8 +4,7 @@ cleanupUnusedCatalogs: true
 
 shellEmulator: true
 
-# eslint-disable-next-line pnpm/yaml-enforce-settings
-trustPolicy: off
+trustPolicy: no-downgrade
 
 packages:
   - api
@@ -39,7 +38,7 @@ catalog:
   '@mdit-vue/plugin-title': ^3.0.2
   '@mdit-vue/plugin-toc': ^3.0.2
   '@mdit-vue/shared': ^3.0.2
-  '@microsoft/api-extractor': ^7.57.2
+  '@microsoft/api-extractor': ^7.57.3
   '@playwright/test': ^1.58.2
   '@rollup/pluginutils': ^5.3.0
   '@shikijs/transformers': ^3.22.0
@@ -110,7 +109,7 @@ catalog:
   jiti: ^2.6.1
   js-base64: ^3.7.8
   js-yaml: ^4.1.1
-  katex: ^0.16.29
+  katex: ^0.16.32
   lightgallery: 2.7.2
   lint-staged: ^16.2.7
   lru-cache: ^11.2.6
@@ -122,6 +121,7 @@ catalog:
   markdown-it-emoji: ^3.0.0
   markdown-it-footnote: ^4.0.0
   markdown-it-image-figures: ^2.1.1
+  markdown-it-mathjax3: ^5.2.0
   markdown-it-table-of-contents: ^1.1.0
   markdown-it-task-lists: ^2.1.1
   medium-zoom: ^1.1.0

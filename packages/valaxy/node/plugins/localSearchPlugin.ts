@@ -213,8 +213,7 @@ export async function localSearchPlugin(
   }
 }
 
-// eslint-disable-next-line regexp/no-super-linear-backtracking
-const headingRegex = /<h(\d+)[^>]*>(.*?<a[^>]* href="#[^"]*"[^>]*>[^<]*<\/a>)<\/h\1>/gi
+const headingRegex = /<h(\d)[^>]*>(.*?<a[^>]* href="#[^"]*"[^>]*>[^<]*<\/a>)<\/h\1>/gi
 const headingContentRegex = /(.*)<a[^>]* href="#([^"]*)"[^>]*>[^<]*<\/a>/i
 
 /**
