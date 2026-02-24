@@ -88,6 +88,6 @@ posts
 ```
 
 ```md [posts/your-post/index.md]
-![](./a.png)
-![](./b.png)
+![image a](./a.png)
+![image b](./b.png)
 ```

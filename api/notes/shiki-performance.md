@@ -90,7 +90,7 @@ if (!loadLanguage(lang)) {
 }
 ```
 
-### Shiki v3
+## Shiki v3
 
 > https://github.com/shikijs/shiki/issues/952
 

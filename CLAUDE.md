@@ -107,7 +107,7 @@ pnpm devtools
 
 ### Monorepo Structure
 
-```
+```txt
 valaxy/
 ├── packages/
 │   ├── @valaxyjs/utils/      # Shared utilities
@@ -164,7 +164,7 @@ The core is split into **Node** (build-time) and **Client** (runtime):
 
 **Roots System:**
 File resolution follows priority order:
-```
+```txt
 roots = [clientRoot, themeRoot, ...addonRoots, userRoot]
 ```
 User content overrides theme overrides core.
@@ -201,7 +201,7 @@ Uses `markdown-it` with custom plugins:
 Themes are self-contained npm packages that extend Valaxy.
 
 **Theme Structure:**
-```
+```txt
 valaxy-theme-{name}/
 ├── client/           # Client-side code
 ├── node/             # Node-side config
@@ -227,7 +227,7 @@ Reference: [valaxy-theme-starter](https://github.com/YunYouJun/valaxy-theme-star
 Addons are pluggable packages for additional features.
 
 **Addon Structure:**
-```
+```txt
 valaxy-addon-{name}/
 ├── client/           # Vue components/stores
 ├── node/             # Node-side setup

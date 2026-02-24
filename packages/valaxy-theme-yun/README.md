@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="200" src="https://cdn.jsdelivr.net/gh/YunYouJun/yun/images/meme/yun-good-alpha-compressed.png">
+  <img width="200" src="https://cdn.jsdelivr.net/gh/YunYouJun/yun/images/meme/yun-good-alpha-compressed.png" alt="Theme Yun">
 </p>
 
 <p align="center">
@@ -28,6 +28,6 @@ pnpm build
 
 <p align="center">
   <a href="https://www.yunyoujun.cn/sponsors/">
-    <img src='https://fastly.jsdelivr.net/gh/YunYouJun/sponsors/public/sponsors.svg'/>
+    <img src='https://fastly.jsdelivr.net/gh/YunYouJun/sponsors/public/sponsors.svg' alt="Sponsors"/>
   </a>
 </p>

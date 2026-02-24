@@ -57,7 +57,7 @@ title: 在 Markdown 中使用 Vue
 **输入**
 :::
 
-```
+```md
 :tada: :100:
 ```
 
@@ -90,7 +90,7 @@ A [list of all emojis](https://github.com/markdown-it/markdown-it-emoji/blob/mas
 **输入**
 :::
 
-```
+```md
 [[toc]]
 ```
 
@@ -120,7 +120,7 @@ Rendering of the TOC can be configured using the `markdown.toc` option.
 **Input**
 :::
 
-````
+````md
 ```js{4}
 export default {
   data () {
@@ -232,7 +232,7 @@ Adding the `// [!code --]` or `// [!code ++]` comments on a line will create a d
 Note that only one space is needed after `!code`, there are two spaces here in case it is rendered.
 :::
 
-````
+````md
 ```js
 export default {
   data () {
@@ -292,7 +292,7 @@ Note that only one space is needed after `!code`, there are two spaces here in c
 请注意，在 `!code`后面只需要一个空格，这里有两个空格以防被渲染。
 :::
 
-````
+````md
 ```js
 export default {
   data () {
@@ -341,11 +341,11 @@ You can import code snippets from existing files via following syntax:
 ```
 
 ::: en
-It also supports [line highlighting](#line-highlighting-in-code-blocks):
+It also supports [line highlighting](#line-of-code-highlighting):
 :::
 
 ::: zh-CN
-它还支持 [行高亮](#line-highlighting-in-code-blocks):
+它还支持 [行高亮](#line-of-code-highlighting):
 :::
 
 ```md

@@ -20,7 +20,7 @@ More info see [Markdown Extensions](https://valaxy.site/guide/markdown).
 
 **Input**
 
-```
+```md
 :tada: :100:
 ```
 
@@ -35,7 +35,7 @@ A [list of all emojis](https://github.com/markdown-it/markdown-it-emoji/blob/mas
 
 **Input**
 
-```
+```md
 [[toc]]
 ```
 
@@ -49,7 +49,7 @@ Rendering of the TOC can be configured using the `markdown.toc` option.
 
 **Input**
 
-````
+````md
 ```js{4}
 export default {
   data () {
@@ -121,7 +121,7 @@ Adding the `// [!code --]` or `// [!code ++]` comments on a line will create a d
 
 **Input**
 
-````
+````md
 ```js
 export default {
   data () {
@@ -153,7 +153,7 @@ Adding the `// [!code warning]` or `// [!code error]` comments on a line will co
 
 **Input**
 
-````
+````md
 ```js
 export default {
   data () {
@@ -187,7 +187,7 @@ You can import code snippets from existing files via following syntax:
 <<< @/filepath
 ```
 
-It also supports [line highlighting](#line-highlighting-in-code-blocks):
+It also supports [line highlighting](#代码行高亮):
 
 ```md
 <<< @/filepath{highlightLines}

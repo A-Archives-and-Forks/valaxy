@@ -231,7 +231,7 @@ const appStore = useAppStore()
 
 你可以从 valaxy 导入全局状态 `useAppStore`，记录 `showLoading` 来实现。
 
-> 你也可以使用你自己的全局状态管理。参见 [状态管理](#状态管理)。
+> 你也可以使用你自己的全局状态管理。参见 [全局状态管理](#全局状态管理)。
 
 ```vue [valaxy-theme-yun/App.vue]
 <script lang="ts" setup>

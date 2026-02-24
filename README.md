@@ -87,7 +87,7 @@ Want to create your theme? Check [valaxy-theme-starter](https://github.com/YunYo
 
 <p align="center">
   <a href="https://www.yunyoujun.cn/sponsors/">
-    <img src='https://fastly.jsdelivr.net/gh/YunYouJun/sponsors/public/sponsors.svg'/>
+    <img src='https://fastly.jsdelivr.net/gh/YunYouJun/sponsors/public/sponsors.svg' alt="Sponsors"/>
   </a>
 </p>
 
