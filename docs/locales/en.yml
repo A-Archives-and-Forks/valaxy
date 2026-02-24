@@ -100,5 +100,13 @@ toc:
   extend-config: Extend Config
   unocss-options: UnoCSS Options
 
+migration:
+  prompt:
+    title: AI Migration Assistant
+    description: Select your source framework, copy the prompt to your AI assistant, and migrate quickly.
+    copy: Copy
+    copied: Copied
+    other: Other
+
 post:
   contributors: Contributors

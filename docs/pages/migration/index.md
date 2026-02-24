@@ -7,6 +7,20 @@ categories:
 top: 10
 ---
 
+## AI 迁移助手 {lang="zh-CN"}
+
+## AI Migration Assistant {lang="en"}
+
+::: zh-CN
+选择你的原始框架，复制提示词到 AI 助手中，快速完成迁移。
+:::
+
+::: en
+Select your source framework, copy the prompt to your AI assistant, and migrate quickly.
+:::
+
+<MigrationPrompt />
+
 ## 从 Hexo 迁移至 Valaxy {lang="zh-CN"}
 
 ## Migrate from Hexo to Valaxy {lang="en"}

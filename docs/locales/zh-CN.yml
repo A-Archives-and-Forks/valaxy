@@ -100,5 +100,13 @@ toc:
   extend-config: 扩展配置
   unocss-options: UnoCSS 配置
 
+migration:
+  prompt:
+    title: AI 迁移助手
+    description: 选择你的原始框架，复制提示词到 AI 助手中，快速完成迁移。
+    copy: 复制
+    copied: 已复制
+    other: 其他
+
 post:
   contributors: 贡献者
