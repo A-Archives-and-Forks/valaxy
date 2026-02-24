@@ -124,6 +124,7 @@
     "nprogress": "catalog:",
     "open": "catalog:",
     "ora": "catalog:",
+    "p-map": "catalog:",
     "pascalcase": "catalog:",
     "pathe": "catalog:",
     "pinia": "catalog:",
@@ -169,11 +170,10 @@
     "@types/pascalcase": "catalog:",
     "@types/qrcode": "catalog:",
     "@types/yargs": "catalog:",
-    "cilicili": "catalog:",
-    "diacritics": "catalog:",
+
     "gh-pages": "catalog:",
     "https-localhost": "catalog:",
-    "p-map": "catalog:",
+    "nanoid": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
     "unbuild": "catalog:build"
   }

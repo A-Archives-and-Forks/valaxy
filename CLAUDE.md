@@ -195,6 +195,8 @@ Uses `markdown-it` with custom plugins:
 - Filters draft posts in production
 - Supports pagination
 - Generates sitemap and redirects
+- **Minimum heap: ~2.3 GB** (`--max-old-space-size=2304`). Vite build + SSG rendering share the same process; build artifacts stay in memory during rendering.
+- Auto-adjusts based on heap limit: ≤2.5 GB disables beasties (Critical CSS) and HTML minify, concurrency=1; >2.5 GB enables full features with higher concurrency.
 
 ## Theme Development
 

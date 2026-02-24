@@ -39,11 +39,23 @@ npm run build
 
 执行 `build` 命令构建，`dist` 文件夹为构建后的内容。
 
+SSG 构建最低需要 ~2.3 GB 堆内存。如果遇到 `JavaScript heap out of memory` 错误，请设置：
+
+```bash
+NODE_OPTIONS=--max-old-space-size=4096 pnpm build
+```
+
 :::
 
 ::: en
 
 Run the `build` command to build, and the `dist` directory contains the built content.
+
+SSG build requires at least ~2.3 GB of heap memory. If you encounter `JavaScript heap out of memory`, set:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=4096 pnpm build
+```
 
 :::
 

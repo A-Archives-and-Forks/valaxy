@@ -16,27 +16,71 @@ import { ViteValaxyPlugins } from './plugins/preset'
 import { collectRedirects, writeRedirectFiles } from './utils/clientRedirects'
 
 /**
+ * Attempt to trigger garbage collection if `--expose-gc` is enabled.
+ * Falls back to a no-op otherwise — safe to call unconditionally.
+ */
+function tryGC() {
+  if (typeof globalThis.gc === 'function') {
+    globalThis.gc()
+  }
+}
+
+/**
  * Determine SSG concurrency based on the available JS heap size.
  *
  * Each concurrent page render creates a JSDOM instance + beasties CSS
  * processing, consuming ~100-200 MB. We read V8's heap_size_limit
  * (which reflects `--max-old-space-size`) and scale concurrency accordingly.
  */
-function getSSGConcurrency(): number {
-  const heapLimitMB = v8.getHeapStatistics().heap_size_limit / 1024 / 1024
+function getHeapLimitMB(): number {
+  return v8.getHeapStatistics().heap_size_limit / 1024 / 1024
+}
 
+function getSSGConcurrency(): number {
+  const heapLimitMB = getHeapLimitMB()
+
+  // Each concurrent page render holds a JSDOM instance (~30-50 MB) + Vue App +
+  // beasties CSS processing (~20-40 MB).
+  // V8's heap_size_limit is ~200 MB above --max-old-space-size, so thresholds
+  // are set accordingly (e.g. 2560 covers --max-old-space-size=2048).
   let concurrency: number
-  if (heapLimitMB <= 2048)
+  if (heapLimitMB <= 2560)
+    concurrency = 1
+  else if (heapLimitMB <= 3200)
     concurrency = 2
-  else if (heapLimitMB <= 3072)
+  else if (heapLimitMB <= 4300)
     concurrency = 4
-  else if (heapLimitMB <= 4096)
+  else if (heapLimitMB <= 8400)
     concurrency = 8
   else
     concurrency = 16
 
   consola.info(`SSG concurrency: ${colors.yellow(concurrency)} (heap limit: ${colors.yellow(Math.round(heapLimitMB))} MB)`)
   return concurrency
+}
+
+/**
+ * Return beasties options or `false` to disable Critical CSS generation.
+ *
+ * Beasties loads the full CSS bundle into memory and creates a JSDOM-backed
+ * HTML parser for **every** page it processes, consuming ~100-200 MB on top
+ * of what vite-ssg's own JSDOM instance already uses. Under tight heap
+ * limits (≤ 2 GB) this alone is enough to cause OOM, so we disable it.
+ */
+function getSSGBeastiesOptions(): ViteSSGOptions['beastiesOptions'] {
+  const heapLimitMB = getHeapLimitMB()
+
+  // V8's heap_size_limit includes young generation overhead (~200 MB above
+  // --max-old-space-size), so we use 2560 to cover --max-old-space-size=2048.
+  if (heapLimitMB <= 2560) {
+    consola.warn(`Heap limit ${Math.round(heapLimitMB)} MB is too low for beasties — Critical CSS generation disabled`)
+    return false
+  }
+
+  return {
+    preload: 'media',
+    reduceInlineStyles: false,
+  }
 }
 
 export async function build(
@@ -95,25 +139,15 @@ export async function ssgBuild(
 
   const valaxySsgDefaults: Partial<ViteSSGOptions> = {
     script: 'async',
-    formatting: 'minify',
+    // html-minifier-terser parses inline JS/CSS into ASTs, consuming ~50-100 MB
+    // per page. Disable under tight heap limits; the output gzips equally well.
+    formatting: getHeapLimitMB() <= 2560 ? 'none' : 'minify',
     concurrency: getSSGConcurrency(),
-    beastiesOptions: {
-      /**
-       * Preload strategy for non-critical CSS.
-       *
-       * - `'media'`: Uses `<link rel="stylesheet" media="print" onload="this.media='all'">`.
-       *   The link stays as `rel="stylesheet"` so browsers handle it predictably;
-       *   JS-disabled users still get print styles as a fallback.
-       * - `'swap'` (previous default): Converts links to `<link rel="preload" onload='this.rel="stylesheet"'>`.
-       *   CSS relies entirely on JS `onload` callback, causing FOUC on slow networks.
-       *
-       * Other available strategies: `'body'`, `'swap-high'`, `'swap-low'`, `'js'`, `'js-lazy'`
-       * @see https://github.com/danielroe/beasties#preload
-       */
-      preload: 'media',
-      // Skip inline <style> blocks (Vue scoped styles) — they are already small and scoped
-      reduceInlineStyles: false,
-    },
+    // Disable beasties (Critical CSS) when heap is constrained.
+    // beasties loads full CSS into memory and parses HTML via JSDOM for every
+    // page, adding ~100-200 MB to the rendering baseline. We fall back to a
+    // simple <link rel="stylesheet"> which is fine for most sites.
+    beastiesOptions: getSSGBeastiesOptions(),
     onFinished() {
       generateSitemap(
         {
@@ -160,6 +194,10 @@ export async function ssgBuild(
       mdDisposePromise = (async () => {
         disposeMdItInstance()
         disposePreviewMdItInstance()
+        // Hint V8 to collect garbage freed by disposing Shiki/MarkdownIt.
+        // This is especially important under tight heap limits where the Vite
+        // build phase already consumed most of the budget.
+        tryGC()
       })()
     }
     await mdDisposePromise
@@ -175,6 +213,36 @@ export async function ssgBuild(
   }
   else {
     mergedSsgOptions.onBeforePageRender = valaxyOnBeforePageRender
+  }
+
+  // Eagerly release Vue app instances after each page is rendered to prevent
+  // JSDOM + Vue trees from accumulating across concurrent renders.
+  // vite-ssg does NOT call app.unmount() or clean up initialState, so without
+  // this hook each render leaks ~30-80 MB until GC catches up (often too late).
+  const valaxyOnPageRendered: ViteSSGOptions['onPageRendered'] = (_route, renderedHTML, appCtx) => {
+    // Clear serialized Pinia state and any other accumulated SSR state
+    if (appCtx.initialState) {
+      for (const key of Object.keys(appCtx.initialState))
+        delete appCtx.initialState[key]
+    }
+
+    // Hint V8 to collect garbage between page renders — this is the only
+    // chance to free JSDOM instances from the previous render before the
+    // next one allocates a new one.
+    tryGC()
+
+    return renderedHTML
+  }
+
+  if (userSsgOptions.onPageRendered) {
+    const userOnPageRendered = userSsgOptions.onPageRendered
+    mergedSsgOptions.onPageRendered = async (route, renderedHTML, appCtx) => {
+      const html = await userOnPageRendered(route, renderedHTML, appCtx) ?? renderedHTML
+      return valaxyOnPageRendered(route, html, appCtx)
+    }
+  }
+  else {
+    mergedSsgOptions.onPageRendered = valaxyOnPageRendered
   }
 
   // Generate static pages for pagination

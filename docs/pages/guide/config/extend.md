@@ -208,8 +208,9 @@ You can customize SSG behavior via `vite.ssgOptions`.
 Valaxy 默认设置了以下 SSG 选项，用户配置会覆盖这些默认值：
 
 - `script`: `'async'` — 脚本加载模式
-- `formatting`: `'minify'` — HTML 输出格式
+- `formatting`: `'minify'` — HTML 输出格式（低内存时自动降级为 `'none'`）
 - `beastiesOptions.preload`: `'media'` — 非关键 CSS 预加载策略（[详见 beasties](https://github.com/danielroe/beasties#preload)）
+- `concurrency` — 并发渲染页面数（根据可用堆内存自动调整）
 - `onFinished` — 构建完成后自动生成 sitemap（始终执行，用户回调会在其后运行）
 
 完整参数列表请参见 [ViteSSGOptions](https://github.com/antfu-collective/vite-ssg)。
@@ -221,13 +222,50 @@ Valaxy 默认设置了以下 SSG 选项，用户配置会覆盖这些默认值�
 Valaxy sets the following SSG defaults. User values override them:
 
 - `script`: `'async'` — script loading mode
-- `formatting`: `'minify'` — HTML output formatting
+- `formatting`: `'minify'` — HTML output formatting (auto-degrades to `'none'` under low memory)
 - `beastiesOptions.preload`: `'media'` — non-critical CSS preload strategy ([see beasties](https://github.com/danielroe/beasties#preload))
+- `concurrency` — concurrent page rendering count (auto-adjusted based on available heap memory)
 - `onFinished` — auto-generates sitemap after build (always runs; user callback runs after it)
 
 See [ViteSSGOptions](https://github.com/antfu-collective/vite-ssg) for the full parameter list.
 
 :::
+
+:::: warning
+
+::: zh-CN
+
+**SSG 构建最低内存要求：~2.3 GB**
+
+vite-ssg 在同一 Node.js 进程中执行 Vite 构建和页面渲染，构建阶段的内存无法完全释放。Valaxy 会根据 V8 堆限制自动调整：堆 ≤ 2.5 GB 时禁用 Critical CSS（beasties）和 HTML minify 以节省内存。
+
+如果遇到 `JavaScript heap out of memory` 错误，请增大堆限制：
+
+```bash
+NODE_OPTIONS=--max-old-space-size=4096 pnpm build --ssg
+```
+
+详见 [开发 FAQ - JavaScript heap out of memory](/dev/faq#javascript-heap-out-of-memory)。
+
+:::
+
+::: en
+
+**SSG build minimum memory requirement: ~2.3 GB**
+
+vite-ssg runs Vite build and page rendering in the same Node.js process, and memory from the build phase cannot be fully reclaimed. Valaxy auto-adjusts based on V8 heap limits: when heap ≤ 2.5 GB, Critical CSS (beasties) and HTML minify are disabled to save memory.
+
+If you encounter `JavaScript heap out of memory` errors, increase the heap limit:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=4096 pnpm build --ssg
+```
+
+See [Dev FAQ - JavaScript heap out of memory](/dev/faq#javascript-heap-out-of-memory) for details.
+
+:::
+
+::::
 
 ```ts [valaxy.config.ts]
 import { defineValaxyConfig } from 'valaxy'

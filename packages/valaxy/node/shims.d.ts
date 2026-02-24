@@ -17,8 +17,3 @@ declare module 'markdown-it-image-figures' {
   const def: any
   export default def
 }
-
-declare module 'diacritics' {
-  function remove(str: string): string
-  export { remove }
-}

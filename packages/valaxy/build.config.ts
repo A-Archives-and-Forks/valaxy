@@ -22,9 +22,22 @@ export default defineBuildConfig({
     // dynamic install
     'gh-pages',
     'rollup-plugin-visualizer',
+    'markdown-it-mathjax3',
 
     '@vueuse/shared',
   ],
+
+  rollup: {
+    inlineDependencies: [
+      '@mdit-vue/plugin-headers',
+      '@mdit-vue/plugin-sfc',
+      '@mdit-vue/plugin-title',
+      '@mdit-vue/plugin-toc',
+      '@mdit-vue/shared',
+      '@mdit-vue/types',
+      'nanoid',
+    ],
+  },
 
   failOnWarn: false,
 })

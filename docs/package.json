@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "npm run build:ssg",
+    "build": "pnpm run build:ssg",
     "build:spa": "valaxy build",
     "build:ssg": "valaxy build --ssg",
     "dev": "nodemon -w \"../packages/valaxy/dist/*.js\" --exec \"valaxy .\"",
